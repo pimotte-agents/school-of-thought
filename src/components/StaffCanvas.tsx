@@ -279,7 +279,9 @@ function StaffCard({
   // Split mentees into staff and students
   const staffMentees = mentees.filter((m) => m.rank !== 'student');
   const studentMentees = mentees.filter((m) => m.rank === 'student');
-  const studentHeight = studentMentees.length > 0 ? 24 + studentMentees.length * 30 : 0;
+  const studentCardHeight = 56;
+  const studentGap = 6;
+  const studentHeight = studentMentees.length > 0 ? 20 + studentMentees.length * (studentCardHeight + studentGap) : 0;
 
   return (
     <div
@@ -336,38 +338,118 @@ function StaffCard({
         </div>
       )}
 
-      {/* PhD students list */}
+      {/* PhD students list — full draggable boxes */}
       {studentMentees.length > 0 && (
         <div className="staff-card-students">
           <div className="students-label">Students ({studentMentees.length})</div>
           {studentMentees.map((s) => (
-            <div
+            <MenteeBox
               key={s.id}
-              className="staff-card-student"
-              draggable
-              onDragStart={(e) => {
-                e.stopPropagation();
-                e.dataTransfer.setData('menteeId', s.id);
-                e.dataTransfer.effectAllowed = 'move';
-              }}
-            >
-              <span style={{ color: getRankColor(s.rank) }}>
-                {RANK_EMOJI[s.rank]}
-              </span>
-              <span>{s.name}</span>
-              <span className="staff-card-student-stats">Σ {s.stats.rigor + s.stats.creativity + s.stats.teaching}</span>
-              <span
-                className="staff-card-student-remove"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  assignMentor(s.id, null);
-                }}
-                title="Remove student"
-              >✕</span>
-            </div>
+              student={s}
+              onRemove={() => assignMentor(s.id, null)}
+            />
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+/* --------------------------------------------------------------------------- */
+/*  MenteeBox — a small draggable box for students inside a staff card        */
+/* --------------------------------------------------------------------------- */
+
+function MenteeBox({
+  student,
+  onRemove,
+}: {
+  student: Student;
+  onRemove: () => void;
+}) {
+  const [dragging, setDragging] = useState(false);
+  const [mouseDownPos, setMouseDownPos] = useState({ x: 0, y: 0 });
+  const hasMoved = useRef(false);
+  const isDraggingRef = useRef(false);
+
+  const rankColor = getRankColor(student.rank);
+  const boxWidth = 180;
+
+  const handleMouseDown = useCallback(
+    (e: MouseEvent) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setMouseDownPos({ x: e.clientX, y: e.clientY });
+      hasMoved.current = false;
+      isDraggingRef.current = true;
+      setDragging(true);
+    },
+    []
+  );
+
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (!isDraggingRef.current) return;
+      const dx = e.clientX - mouseDownPos.x;
+      const dy = e.clientY - mouseDownPos.y;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+        hasMoved.current = true;
+      }
+      if (hasMoved.current) {
+        // Reposition the box by updating its DOM transform
+        const box = e.target as HTMLElement;
+        if (box.style.transform) {
+          const match = box.style.transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
+          if (match) {
+            const nx = parseFloat(match[1]) + dx;
+            const ny = parseFloat(match[2]) + dy;
+            box.style.transform = `translate(${nx}px, ${ny}px)`;
+          }
+        } else {
+          box.style.transform = `translate(${dx}px, ${dy}px)`;
+        }
+        setMouseDownPos({ x: e.clientX, y: e.clientY });
+      }
+    },
+    [mouseDownPos]
+  );
+
+  const handleMouseUp = useCallback(
+    (e: MouseEvent) => {
+      if (!isDraggingRef.current) return;
+      isDraggingRef.current = false;
+      setDragging(false);
+
+      if (hasMoved.current) {
+        // Dragged — remove mentorship
+        onRemove();
+        // Reset the box transform
+        const box = e.target as HTMLElement;
+        box.style.transform = '';
+      }
+    },
+    [onRemove]
+  );
+
+  return (
+    <div
+      className={`mentee-box ${dragging ? 'dragging' : ''}`}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      style={{ cursor: dragging ? 'grabbing' : 'grab' }}
+    >
+      <span style={{ color: rankColor, fontSize: 14 }}>{RANK_EMOJI[student.rank]}</span>
+      <span className="mentee-name">{student.name}</span>
+      <span className="mentee-stats">Σ {student.stats.rigor + student.stats.creativity + student.stats.teaching}</span>
+      <span
+        className="mentee-remove"
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemove();
+        }}
+        title="Remove student"
+      >✕</span>
     </div>
   );
 }
