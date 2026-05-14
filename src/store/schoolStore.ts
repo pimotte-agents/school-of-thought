@@ -11,8 +11,9 @@ import type {
   ResearchField,
   ActiveTheorem,
   EventEntry,
+  PositionId,
 } from '../types/game';
-import { DEFAULT_RATIOS } from '../types/game';
+import { DEFAULT_RATIOS, POSITION_DATA, POSITION_IDS } from '../types/game';
 import {
   ALL_THEOREMS,
   getNextTheorem,
@@ -46,9 +47,12 @@ function createInitialState(): SchoolState {
       prestige: 0,
     },
     config: {
-      maxCapacity: 5,
+      maxCapacity: 3,
+      positions: { phd: 3, assistant: 0, associate: 0, professor: 0 },
       prestigeBuffs: [],
     },
+    // maxCapacity is always the sum of position counts
+    // (kept as explicit value for persistence)
     students: initialStudents,
     currentTheorems: [],
     activeTheorems: [],
@@ -105,6 +109,7 @@ interface SchoolStore extends SchoolState {
   promoteStudent: (studentId: string) => void;
   assignFields: (studentId: string, fields: ResearchField[]) => void;
   assignMentor: (studentId: string, mentorId: string | null) => void;
+  buyPosition: (positionId: PositionId) => void;
   retire: () => void;
   setGameSpeed: (speed: number) => void;
   clearEventLog: () => void;
@@ -292,6 +297,8 @@ export const useSchoolStore = create<SchoolStore>()(
       hireStudent: () => {
         const { students, resources, config } = get();
         if (students.length >= config.maxCapacity) return;
+        const phdCount = students.filter((s) => s.rank === 'student').length;
+        if (phdCount >= config.positions.phd) return;
 
         const cost = 20 + students.length * 5;
         if (resources.money < cost) return;
@@ -331,6 +338,16 @@ export const useSchoolStore = create<SchoolStore>()(
         // Check ratio constraints
         const ratios = checkRankRatios(state.students, DEFAULT_RATIOS, targetRank);
         if (!ratios.canPromote) return;
+
+        // Check position count for target rank
+        const rankToPosition: Record<StudentRank, PositionId> = {
+          student: 'phd',
+          assistant: 'assistant',
+          associate: 'associate',
+          professor: 'professor',
+        };
+        const currentRankCount = state.students.filter((s) => s.rank === targetRank).length;
+        if (currentRankCount >= state.config.positions[rankToPosition[targetRank]]) return;
 
         set((prev) => ({
           ...prev,
@@ -395,8 +412,10 @@ export const useSchoolStore = create<SchoolStore>()(
 
       retire: () => {
         const state = get();
-        const associates = state.students.filter((s) => s.rank === 'associate');
+        const associates = state.students.filter((s) => s.rank === 'associate' || s.rank === 'professor');
         if (associates.length === 0) return;
+        // Check there's room in PhD positions for new students
+        if (state.config.positions.phd < 2) return;
 
         // Weighted random successor
         const total = associates.reduce((s, a) => s + studentTotalStats(a), 0);
@@ -451,6 +470,41 @@ export const useSchoolStore = create<SchoolStore>()(
               timestamp: state.totalMonthsPlayed,
             }))),
           ],
+        });
+      },
+
+      // ===================================================================
+      // Positions
+      // ===================================================================
+      buyPosition: (positionId: PositionId) => {
+        const state = get();
+        const data = POSITION_DATA[positionId];
+        const currentCount = state.config.positions[positionId];
+        const cost = data.baseCost + currentCount * data.costPerLevel;
+
+        if (state.resources.money < cost) return;
+
+        set((prev) => {
+          const newPositions = { ...prev.config.positions, [positionId]: prev.config.positions[positionId] + 1 };
+          const newMaxCapacity = Object.values(newPositions).reduce((a, b) => a + b, 0);
+          return {
+            ...prev,
+            resources: { ...prev.resources, money: prev.resources.money - cost },
+            config: {
+              ...prev.config,
+              positions: newPositions,
+              maxCapacity: newMaxCapacity,
+            },
+            eventLog: [
+              ...prev.eventLog,
+              {
+                id: generateId(),
+                type: 'event',
+                message: `🏗️ Expanded: +1 ${data.label} position (${newPositions[positionId]} total).`,
+                timestamp: prev.totalMonthsPlayed,
+              },
+            ],
+          };
         });
       },
 

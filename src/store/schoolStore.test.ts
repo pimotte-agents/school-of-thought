@@ -14,7 +14,7 @@ function createTestStore(initial?: Partial<SchoolState>) {
   const defaults: SchoolState = {
     generation: 1,
     resources: { theorems: 5, money: 100, reputation: 10, prestige: 0 },
-    config: { maxCapacity: 5, prestigeBuffs: [] },
+    config: { maxCapacity: 5, positions: { phd: 5, assistant: 0, associate: 0, professor: 0 }, prestigeBuffs: [] },
     students: [
       createStudent(generateStudentName()),
       createStudent(generateStudentName()),
@@ -176,7 +176,7 @@ describe('hireStudent', () => {
 
   it('does not hire when at capacity', () => {
     const store = createTestStore();
-    store.setState({ config: { maxCapacity: 3, prestigeBuffs: [] } });
+    store.setState({ config: { maxCapacity: 3, positions: { phd: 3, assistant: 0, associate: 0, professor: 0 }, prestigeBuffs: [] } });
     const before = store.getState().students.length;
     store.getState().hireStudent();
     expect(store.getState().students.length).toBe(before);

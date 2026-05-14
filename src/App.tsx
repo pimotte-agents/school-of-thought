@@ -6,6 +6,7 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import { useSchoolStore } from './store/schoolStore';
 import { StudentCard } from './components/StudentCard';
 import { TheoremPanel } from './components/TheoremPanel';
+import { PositionsPanel } from './components/PositionsPanel';
 import { ActionsPanel } from './components/ActionsPanel';
 import { TopBar } from './components/TopBar';
 import { BottomBar } from './components/BottomBar';
@@ -81,9 +82,14 @@ function App() {
           </div>
         </aside>
 
-        {/* Center Panel — Theorem Pipeline */}
-        <section className="panel theorem-pipeline">
-          <TheoremPanel />
+        {/* Center Panel — Theorem Pipeline + Positions */}
+        <section className="panel center-panels">
+          <div className="theorem-pipeline">
+            <TheoremPanel />
+          </div>
+          <div className="positions-sidebar">
+            <PositionsPanel />
+          </div>
         </section>
 
         {/* Right Panel — Actions & Log */}

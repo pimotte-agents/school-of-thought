@@ -49,6 +49,61 @@ export const RANK_EMOJI: Record<StudentRank, string> = {
   professor: '🏛️',
 };
 
+// --- Positions (upgradeable slots per rank) ---
+
+export type PositionId = 'phd' | 'assistant' | 'associate' | 'professor';
+
+export interface PositionType {
+  id: PositionId;
+  label: string;
+  emoji: string;
+  baseCount: number;     // starting count
+  baseCost: number;      // cost of first upgrade (0 = already owned)
+  costPerLevel: number;  // $ per level (scales linearly)
+  color: string;
+}
+
+export const POSITION_DATA: Record<PositionId, PositionType> = {
+  phd: {
+    id: 'phd',
+    label: 'PhD Position',
+    emoji: '🎓',
+    baseCount: 3,
+    baseCost: 0,
+    costPerLevel: 50,
+    color: '#a8d8ea',
+  },
+  assistant: {
+    id: 'assistant',
+    label: 'Assistant Professor',
+    emoji: '👤',
+    baseCount: 0,
+    baseCost: 100,
+    costPerLevel: 50,
+    color: '#ffd93d',
+  },
+  associate: {
+    id: 'associate',
+    label: 'Associate Professor',
+    emoji: '👑',
+    baseCount: 0,
+    baseCost: 300,
+    costPerLevel: 150,
+    color: '#ff6b6b',
+  },
+  professor: {
+    id: 'professor',
+    label: 'Full Professor',
+    emoji: '🏛️',
+    baseCount: 0,
+    baseCost: 1000,
+    costPerLevel: 500,
+    color: '#c084fc',
+  },
+};
+
+export const POSITION_IDS: PositionId[] = ['phd', 'assistant', 'associate', 'professor'];
+
 // --- Student ---
 
 export type TraitId =
@@ -151,8 +206,16 @@ export interface Resources {
 
 // --- School State ---
 
+export interface PositionCounts {
+  phd: number;
+  assistant: number;
+  associate: number;
+  professor: number;
+}
+
 export interface SchoolConfig {
   maxCapacity: number;
+  positions: PositionCounts;
   prestigeBuffs: PrestigeBuffState[];
 }
 
