@@ -1762,3 +1762,59 @@ button {
   font-size: 11px;
   opacity: 0.5;
 }
+
+/* ---------------------------------------------------------------------------
+   PhD Student Boxes
+   --------------------------------------------------------------------------- */
+
+.phd-student-box {
+  position: absolute;
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  cursor: grab;
+  user-select: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.phd-student-box:hover {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+
+.phd-student-box.dragging {
+  cursor: grabbing;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  z-index: 100 !important;
+  opacity: 0.9;
+}
+
+.phd-student-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.phd-student-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.phd-student-stats {
+  font-size: 11px;
+  color: var(--text-dim);
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.phd-student-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}

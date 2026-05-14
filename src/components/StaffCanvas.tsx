@@ -19,6 +19,94 @@ function rankOrder(rank: StudentRank): number {
 }
 
 /* --------------------------------------------------------------------------- */
+/*  PhDStudentBox — a simpler box for regular students on the canvas           */
+/* --------------------------------------------------------------------------- */
+
+function PhDStudentBox({
+  student,
+  panOffset,
+}: {
+  student: Student;
+  panOffset: { x: number; y: number };
+}) {
+  const [dragging, setDragging] = useState(false);
+  const [mouseDownPos, setMouseDownPos] = useState({ x: 0, y: 0 });
+  const [cardPos, setCardPos] = useState(() => ({ x: 0, y: 0 }));
+  const hasMoved = useRef(false);
+  const isDraggingRef = useRef(false);
+
+  const boxWidth = 140;
+  const boxHeight = 60;
+  const rankColor = getRankColor(student.rank);
+
+  const handleMouseDown = useCallback(
+    (e: MouseEvent) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setMouseDownPos({ x: e.clientX, y: e.clientY });
+      hasMoved.current = false;
+      isDraggingRef.current = true;
+      setDragging(true);
+    },
+    []
+  );
+
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (!isDraggingRef.current) return;
+      const dx = e.clientX - mouseDownPos.x;
+      const dy = e.clientY - mouseDownPos.y;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+        hasMoved.current = true;
+      }
+      if (hasMoved.current) {
+        setCardPos((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
+        setMouseDownPos({ x: e.clientX, y: e.clientY });
+      }
+    },
+    [mouseDownPos]
+  );
+
+  const handleMouseUp = useCallback(() => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    setDragging(false);
+  }, []);
+
+  return (
+    <div
+      className={`phd-student-box ${dragging ? 'dragging' : ''}`}
+      style={{
+        transform: `translate(${cardPos.x + panOffset.x}px, ${cardPos.y + panOffset.y}px)`,
+        width: boxWidth,
+        height: boxHeight,
+        borderColor: dragging ? '#4ecca3' : rankColor,
+      }}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+    >
+      <div className="phd-student-header">
+        <span style={{ color: rankColor }}>{RANK_EMOJI[student.rank]}</span>
+        <span className="phd-student-name">{student.name}</span>
+      </div>
+      <div className="phd-student-stats">
+        <span>R:{student.stats.rigor} C:{student.stats.creativity} T:{student.stats.teaching}</span>
+        <span>Σ {student.stats.rigor + student.stats.creativity + student.stats.teaching}</span>
+      </div>
+      {student.assignedFields.length > 0 && (
+        <div className="phd-student-fields">
+          {student.assignedFields.map((f) => (
+            <span key={f} className="field-tag">{f}</span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* --------------------------------------------------------------------------- */
 /*  StaffCard — a single draggable staff member rendered on the canvas        */
 /* --------------------------------------------------------------------------- */
 
@@ -381,7 +469,7 @@ export function StaffCanvas() {
 
       {/* Drop target for removing mentor */}
       <div className="clear-drop-zone">
-        <span>🗑</span> Drop staff here to remove mentor
+        <span>🗑</span> Drop any student here to remove mentor
       </div>
 
       {/* Canvas */}
@@ -401,14 +489,7 @@ export function StaffCanvas() {
           transformOrigin: '0 0',
         }}
       >
-        {staff.length === 0 && (
-          <div className="canvas-empty">
-            <p>Promote students to staff to begin organising mentorship.</p>
-            <p>Drag staff onto each other to nest them.</p>
-          </div>
-        )}
-
-        {/* Render mentors first (lower z-index), then mentees (higher z-index) */}
+        {/* Render mentors first (lower z-index), then mentees, then PhD students */}
         {staff
           .sort((a, b) => rankOrder(a.rank) - rankOrder(b.rank))
           .map((s) => (
@@ -421,30 +502,18 @@ export function StaffCanvas() {
               onSetMentor={handleSetMentor}
             />
           ))}
+
+        {/* PhD students */}
+        {regularStudents.map((s) => (
+          <PhDStudentBox
+            key={s.id}
+            student={s}
+            panOffset={panOffset}
+          />
+        ))}
       </div>
 
-      {/* Regular students list */}
-      {regularStudents.length > 0 && (
-        <div className="regular-students-list">
-          <h3>Regular Students ({regularStudents.length})</h3>
-          <div className="regular-students-grid">
-            {regularStudents.map((s) => (
-              <div
-                key={s.id}
-                className="regular-student-chip"
-                draggable
-                onDragStart={(e) => {
-                  e.dataTransfer.setData('menteeId', s.id);
-                  e.dataTransfer.effectAllowed = 'move';
-                }}
-              >
-                <span>{RANK_EMOJI[s.rank]} {s.name}</span>
-                <span className="student-stats">Σ {s.stats.rigor + s.stats.creativity + s.stats.teaching}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }
