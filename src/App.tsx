@@ -7,6 +7,7 @@ import { useSchoolStore } from './store/schoolStore';
 import { StudentCard } from './components/StudentCard';
 import { TheoremPanel } from './components/TheoremPanel';
 import { PositionsPanel } from './components/PositionsPanel';
+import { MentorshipPanel } from './components/MentorshipPanel';
 import { ActionsPanel } from './components/ActionsPanel';
 import { TopBar } from './components/TopBar';
 import { BottomBar } from './components/BottomBar';
@@ -91,6 +92,9 @@ function App() {
             ))}
           </div>
         </aside>
+
+        {/* Mentorship Board */}
+        <MentorshipPanel />
 
         {/* Actions & Log */}
         <aside className="panel actions-panel">
