@@ -1776,6 +1776,7 @@ button {
   cursor: grab;
   user-select: none;
   transition: border-color 0.15s, box-shadow 0.15s;
+  z-index: 50;
 }
 
 .phd-student-box:hover {
