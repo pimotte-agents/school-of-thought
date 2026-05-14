@@ -81,16 +81,15 @@ export function StudentCard({ student, isSelected, onClick }: StudentCardProps) 
     const draggedId = e.dataTransfer.getData('studentId');
     if (!draggedId || draggedId === student.id) return;
 
-    const draggedRank = RANK_ORDER[student.rank] || 0;
-    const targetRank = RANK_ORDER[student.rank] || 0;
+    const targetRankOrder = RANK_ORDER[student.rank];
 
-    // Check that dragged student is lower rank than target
+    // Check that dragged student is higher rank (mentor > mentee)
     const dragState = useSchoolStore.getState();
     const draggedStudent = dragState.students.find((s) => s.id === draggedId);
     if (!draggedStudent) return;
 
     const draggedRankOrder = RANK_ORDER[draggedStudent.rank];
-    if (draggedRankOrder >= targetRank) return; // must be lower rank
+    if (draggedRankOrder <= targetRankOrder) return; // mentor must be higher rank
 
     // Set this student as the dragged student's mentor
     assignMentor(draggedId, student.id);
