@@ -114,7 +114,8 @@ export function checkRankRatios(
     { student: 0, assistant: 0, associate: 0, professor: 0 } as Record<StudentRank, number>
   );
 
-  // Check the ratio for the target promotion rank
+  // Check the ratio for the current rank's promotion cap
+  // When a 'student' promotes to 'assistant', check the assistantMaxPercent cap
   const ratioKeyMap: Record<StudentRank, keyof RankRatios> = {
     student: 'assistantMaxPercent',
     assistant: 'associateMaxPercent',
@@ -122,9 +123,16 @@ export function checkRankRatios(
     professor: 'professorMaxPercent',
   };
 
-  if (targetRank && ratioKeyMap[targetRank]) {
-    const maxPercent = ratios[ratioKeyMap[targetRank]];
+  if (targetRank) {
+    // Map from current rank (who's being promoted from) to ratio key
+    const currentRankKey: StudentRank =
+      targetRank === 'assistant' ? 'student' :
+      targetRank === 'associate' ? 'assistant' :
+      targetRank === 'professor' ? 'associate' : 'student';
+    const ratioKey = ratioKeyMap[currentRankKey];
+    const maxPercent = ratios[ratioKey];
     const maxCount = Math.max(1, Math.floor(total * maxPercent));
+    // The ratio caps the TARGET rank's percentage of total
     if (ranks[targetRank] + 1 > maxCount) {
       return { canPromote: false, reason: `${targetRank} ratio would exceed ${Math.round(maxPercent * 100)}%` };
     }
