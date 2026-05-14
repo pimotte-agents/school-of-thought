@@ -571,17 +571,6 @@ export const useSchoolStore = create<SchoolStore>()(
         gameSpeed: state.gameSpeed,
         totalMonthsPlayed: state.totalMonthsPlayed,
       }),
-    onRehydrateStorage: () => {
-      const skip = sessionStorage.getItem('__school-of-thought-skip-rehydrate');
-      if (skip === '1') {
-        console.log('[SchoolStore] Skipping rehydration (clear-save triggered)');
-        sessionStorage.removeItem('__school-of-thought-skip-rehydrate');
-        return undefined;
-      }
-      return (state) => {
-        console.log('[SchoolStore] Rehydrated from storage:', state ? `${state.students.length} students` : 'none');
-      };
-    },
     }
   )
 );
