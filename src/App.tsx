@@ -61,7 +61,17 @@ function App() {
       />
 
       <main className="main-content">
-        {/* Left Panel — School Hierarchy */}
+        {/* Left Panel — Theorem Pipeline + Positions */}
+        <section className="panel center-panels">
+          <div className="theorem-pipeline">
+            <TheoremPanel />
+          </div>
+          <div className="positions-sidebar">
+            <PositionsPanel />
+          </div>
+        </section>
+
+        {/* Right Panel — School Hierarchy */}
         <aside className="panel hierarchy">
           <h2>
             School ({students.length}/{useSchoolStore.getState().config.maxCapacity})
@@ -82,17 +92,7 @@ function App() {
           </div>
         </aside>
 
-        {/* Center Panel — Theorem Pipeline + Positions */}
-        <section className="panel center-panels">
-          <div className="theorem-pipeline">
-            <TheoremPanel />
-          </div>
-          <div className="positions-sidebar">
-            <PositionsPanel />
-          </div>
-        </section>
-
-        {/* Right Panel — Actions & Log */}
+        {/* Actions & Log */}
         <aside className="panel actions-panel">
           <ActionsPanel />
         </aside>

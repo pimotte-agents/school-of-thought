@@ -200,10 +200,13 @@ button {
    ============================================================================= */
 
 .hierarchy {
-  width: 300px;
+  width: 380px;
+  min-width: 340px;
   background: var(--bg-panel);
-  border-right: 1px solid var(--border);
+  border-left: 1px solid var(--border);
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .student-list {
@@ -229,6 +232,189 @@ button {
 .student-card.selected {
   border-color: var(--accent-green);
   background: rgba(78, 204, 163, 0.1);
+}
+
+/* Staff card — drag target */
+.student-card.staff {
+  position: relative;
+}
+
+.student-card.staff::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 10px;
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.student-card.staff:hover::after {
+  opacity: 0.7;
+}
+
+.student-card.staff.drag-over {
+  background: rgba(78, 204, 163, 0.15);
+  border-color: var(--accent-green);
+}
+
+/* Drag hint icon */
+.drag-hint {
+  font-size: 12px;
+  opacity: 0.4;
+  cursor: grab;
+  margin-left: 4px;
+}
+
+.drag-hint:hover {
+  opacity: 0.8;
+}
+
+/* Mentor info bar */
+.mentor-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  margin: 4px 8px;
+  background: rgba(78, 204, 163, 0.08);
+  border: 1px solid rgba(78, 204, 163, 0.2);
+  border-radius: 4px;
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.unmentor-btn {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 10px;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.unmentor-btn:hover {
+  color: #e94560;
+}
+
+/* Mentees tree */
+.mentees-tree {
+  padding: 4px 8px;
+  margin: 2px 8px;
+  font-size: 10px;
+}
+
+.mentee-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mentee-name {
+  font-weight: 600;
+}
+
+.mentee-subtree {
+  margin-left: 12px;
+  color: var(--text-dim);
+}
+
+.mentee-sub {
+  display: block;
+  font-size: 9px;
+}
+
+/* Hierarchy section in details */
+.hierarchy-row {
+  margin-top: 8px;
+}
+
+.hierarchy-info {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: rgba(78, 204, 163, 0.08);
+  border: 1px solid rgba(78, 204, 163, 0.2);
+  border-radius: 4px;
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+.hierarchy-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+  margin-right: 2px;
+}
+
+.hierarchy-mentor {
+  font-weight: 600;
+}
+
+.remove-mentor-btn {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0 2px;
+  margin-left: auto;
+}
+
+.remove-mentor-btn:hover {
+  color: #e94560;
+}
+
+.hierarchy-mentees {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+.hierarchy-mentee {
+  font-weight: 600;
+  padding: 2px 6px;
+  background: var(--bg-card);
+  border-radius: 3px;
+}
+
+.hierarchy-hint {
+  font-size: 9px;
+  color: var(--text-dim);
+  font-style: italic;
+  margin: 4px 0;
+}
+
+/* Hierarchy tree */
+.hierarchy-tree {
+  margin-top: 4px;
+  padding-left: 4px;
+}
+
+.hierarchy-branch {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 0;
+  position: relative;
+}
+
+.hierarchy-connector {
+  width: 12px;
+  height: 1px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.hierarchy-name {
+  font-size: 10px;
+  font-weight: 600;
 }
 
 .student-card.rank-associate {
@@ -671,6 +857,7 @@ button {
   gap: 0;
   overflow: hidden;
   background: var(--bg);
+  min-width: 0;
 }
 
 .center-panels .theorem-pipeline {
@@ -678,10 +865,11 @@ button {
   min-width: 0;
   padding: 12px 16px;
   overflow-y: auto;
+  max-width: 600px;
 }
 
 .positions-sidebar {
-  width: 320px;
+  width: 280px;
   background: var(--bg-panel);
   border-left: 1px solid var(--border);
   padding: 10px 12px;

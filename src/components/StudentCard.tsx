@@ -1,5 +1,5 @@
 // =============================================================================
-// StudentCard — Interactive student display with controls
+// StudentCard — Interactive student display with drag-and-drop mentor hierarchy
 // =============================================================================
 
 import type { Student, ResearchField } from '../types/game';
@@ -12,6 +12,13 @@ interface StudentCardProps {
   isSelected: boolean;
   onClick: () => void;
 }
+
+const RANK_ORDER: Record<string, number> = {
+  student: 0,
+  assistant: 1,
+  associate: 2,
+  professor: 3,
+};
 
 export function StudentCard({ student, isSelected, onClick }: StudentCardProps) {
   const { promoteStudent, assignFields, assignMentor } = useSchoolStore();
@@ -30,6 +37,8 @@ export function StudentCard({ student, isSelected, onClick }: StudentCardProps) 
   const canPromoteToProfessor = student.rank === 'associate' && isPromotionEligible(student, 'professor');
   const allRatios = checkRankRatios(useSchoolStore.getState().students);
 
+  const isStaff = student.rank !== 'student';
+
   const handlePromote = (e: React.MouseEvent) => {
     e.stopPropagation();
     const targetRank =
@@ -46,23 +55,96 @@ export function StudentCard({ student, isSelected, onClick }: StudentCardProps) 
     assignFields(student.id, next);
   };
 
-  const handleMentorChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleMentorRemove = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const mentorId = e.target.value || null;
-    assignMentor(student.id, mentorId);
+    assignMentor(student.id, null);
   };
-
-  const availableMentors = useSchoolStore.getState().students.filter(
-    (s) => s.id !== student.id
-  );
 
   const totalStats = student.stats.rigor + student.stats.creativity + student.stats.teaching;
 
+  // Drag handlers
+  const handleDragStart = (e: React.DragEvent) => {
+    // Only non-student staff can be dragged as mentors
+    if (!isStaff) return;
+    e.dataTransfer.setData('studentId', student.id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  // Drop handler — only higher-rank staff can receive mentors
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const draggedId = e.dataTransfer.getData('studentId');
+    if (!draggedId || draggedId === student.id) return;
+
+    const draggedRank = RANK_ORDER[student.rank] || 0;
+    const targetRank = RANK_ORDER[student.rank] || 0;
+
+    // Check that dragged student is lower rank than target
+    const dragState = useSchoolStore.getState();
+    const draggedStudent = dragState.students.find((s) => s.id === draggedId);
+    if (!draggedStudent) return;
+
+    const draggedRankOrder = RANK_ORDER[draggedStudent.rank];
+    if (draggedRankOrder >= targetRank) return; // must be lower rank
+
+    // Set this student as the dragged student's mentor
+    assignMentor(draggedId, student.id);
+  };
+
+  // Get mentor info
+  const mentor = student.mentorId
+    ? useSchoolStore.getState().students.find((s) => s.id === student.mentorId)
+    : null;
+
+  // Get mentees
+  const mentees = student.menteeIds
+    .map((id) => useSchoolStore.getState().students.find((s) => s.id === id))
+    .filter(Boolean) as Student[];
+
+  // Build hierarchy tree
+  const HierarchyTree = ({ studentId, depth = 0 }: { studentId: string; depth?: number }) => {
+    const menteeList = useSchoolStore.getState().students
+      .filter((s) => s.mentorId === studentId)
+      .sort((a, b) => RANK_ORDER[b.rank] - RANK_ORDER[a.rank]);
+
+    if (menteeList.length === 0) return null;
+
+    return (
+      <div className="hierarchy-tree" style={{ marginLeft: `${depth * 16 + 8}px` }}>
+        {menteeList.map((m) => (
+          <div key={m.id} className="hierarchy-branch">
+            <div className="hierarchy-connector" />
+            <span className="hierarchy-name" style={{ color: getRankColor(m.rank) }}>
+              {RANK_EMOJI[m.rank]} {m.name}
+            </span>
+            <HierarchyTree studentId={m.id} depth={depth + 1} />
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  function getRankColor(rank: string): string {
+    if (rank === 'professor') return '#f59e0b';
+    if (rank === 'associate') return '#c084fc';
+    if (rank === 'assistant') return '#537895';
+    return '#2a2a4a';
+  }
+
   return (
     <div
-      className={`student-card rank-${student.rank}${isSelected ? ' selected' : ''}`}
+      className={`student-card rank-${student.rank}${isSelected ? ' selected' : ''}${isStaff ? ' staff' : ''}`}
       onClick={onClick}
       style={{ borderColor: isSelected ? rankColor : undefined }}
+      draggable={isStaff}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
     >
       {/* Header */}
       <div className="student-header">
@@ -76,6 +158,9 @@ export function StudentCard({ student, isSelected, onClick }: StudentCardProps) 
         >
           {student.satisfaction >= 60 ? '😊' : student.satisfaction >= 30 ? '😐' : '😟'}
         </span>
+        {isStaff && (
+          <span className="drag-hint" title="Drag to assign as mentor">⠿</span>
+        )}
       </div>
 
       {/* Rank & Stats */}
@@ -114,7 +199,6 @@ export function StudentCard({ student, isSelected, onClick }: StudentCardProps) 
       {/* Meta */}
       <div className="student-meta">
         <span>{student.theoremsProved} theorems</span>
-        <span>•</span>
         {student.mentorId && (
           <>
             <span>•</span>
@@ -143,6 +227,40 @@ export function StudentCard({ student, isSelected, onClick }: StudentCardProps) 
         </div>
       )}
 
+      {/* Mentor info bar (for staff) */}
+      {isStaff && mentor && (
+        <div className="mentor-bar">
+          <span>Mentor: {mentor.name}</span>
+          <button className="unmentor-btn" onClick={handleMentorRemove} title="Remove mentor">✕</button>
+        </div>
+      )}
+
+      {/* Mentees tree (expanded for staff) */}
+      {isStaff && mentees.length > 0 && (
+        <div className="mentees-tree">
+          {mentees.map((m) => (
+            <div key={m.id} className="mentee-entry">
+              <span className="mentee-name" style={{ color: getRankColor(m.rank) }}>
+                {RANK_EMOJI[m.rank]} {m.name}
+              </span>
+              {m.menteeIds.length > 0 && (
+                <div className="mentee-subtree">
+                  {m.menteeIds.map((mid) => {
+                    const sub = useSchoolStore.getState().students.find((s) => s.id === mid);
+                    if (!sub) return null;
+                    return (
+                      <span key={mid} className="mentee-sub" style={{ color: getRankColor(sub.rank) }}>
+                        └ {RANK_EMOJI[sub.rank]} {sub.name}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Selected Panel */}
       {isSelected && (
         <div className="student-details">
@@ -162,18 +280,35 @@ export function StudentCard({ student, isSelected, onClick }: StudentCardProps) 
             </div>
           </div>
 
-          {/* Mentor Assignment */}
-          <div className="detail-row">
-            <label>Mentor</label>
-            <select value={student.mentorId || ''} onChange={handleMentorChange}>
-              <option value="">None</option>
-              {availableMentors.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name} ({RANK_LABELS[m.rank]})
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Hierarchy section for staff */}
+          {isStaff && (
+            <div className="detail-row hierarchy-row">
+              <label>🌳 Hierarchy</label>
+              {mentor && (
+                <div className="hierarchy-info">
+                  <span className="hierarchy-label">Mentor:</span>
+                  <span className="hierarchy-mentor" style={{ color: getRankColor(mentor.rank) }}>
+                    {RANK_EMOJI[mentor.rank]} {mentor.name}
+                  </span>
+                  <button className="remove-mentor-btn" onClick={handleMentorRemove}>✕</button>
+                </div>
+              )}
+              {mentees.length > 0 && (
+                <div className="hierarchy-mentees">
+                  <span className="hierarchy-label">Mentees:</span>
+                  {mentees.map((m) => (
+                    <span key={m.id} className="hierarchy-mentee" style={{ color: getRankColor(m.rank) }}>
+                      {RANK_EMOJI[m.rank]} {m.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <p className="hierarchy-hint">
+                Drag staff onto this card to set mentor
+              </p>
+              <HierarchyTree studentId={student.id} />
+            </div>
+          )}
 
           {/* Promotion Button */}
           {(canPromoteToAssistant || canPromoteToAssociate || canPromoteToProfessor) && (

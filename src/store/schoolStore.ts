@@ -539,7 +539,7 @@ export const useSchoolStore = create<SchoolStore>()(
     }),
     {
       name: 'school-of-thought-save',
-      version: 1,
+      version: 2,
       partialize: (state) => ({
         generation: state.generation,
         resources: state.resources,

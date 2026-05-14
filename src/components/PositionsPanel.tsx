@@ -7,13 +7,15 @@ import { POSITION_DATA, POSITION_IDS, type PositionId } from '../types/game';
 
 export function PositionsPanel() {
   const { config, resources, buyPosition } = useSchoolStore();
+  const positions = config?.positions ?? { phd: 0, assistant: 0, associate: 0, professor: 0 };
+  const maxCapacity = config?.maxCapacity ?? 0;
 
   return (
     <div className="positions-panel">
       <h2>Positions</h2>
       <div className="positions-grid">
         {POSITION_IDS.map((posId) => (
-          <PositionCard key={posId} positionId={posId} />
+          <PositionCard key={posId} positionId={posId} positions={positions} maxCapacity={maxCapacity} />
         ))}
       </div>
       <div className="positions-summary">
@@ -23,10 +25,10 @@ export function PositionsPanel() {
   );
 }
 
-function PositionCard({ positionId }: { positionId: PositionId }) {
-  const { config, resources, buyPosition } = useSchoolStore();
+function PositionCard({ positionId, positions, maxCapacity }: { positionId: PositionId; positions: PositionCounts; maxCapacity: number }) {
+  const { resources, buyPosition } = useSchoolStore();
   const data = POSITION_DATA[positionId];
-  const currentCount = config.positions[positionId];
+  const currentCount = positions[positionId];
   const nextCost = data.baseCost + currentCount * data.costPerLevel;
   const canAfford = resources.money >= nextCost;
 
