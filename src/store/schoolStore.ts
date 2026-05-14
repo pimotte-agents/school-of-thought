@@ -8,17 +8,11 @@ import type {
   SchoolState,
   Student,
   StudentRank,
-  SchoolIdeology,
   ResearchField,
   ActiveTheorem,
   EventEntry,
-  Theorem,
 } from '../types/game';
-import {
-  INITIAL_UNLOCKED_FIELDS,
-  IDEOLOGY_DATA,
-  DEFAULT_RATIOS,
-} from '../types/game';
+import { DEFAULT_RATIOS } from '../types/game';
 import {
   ALL_THEOREMS,
   getNextTheorem,
@@ -30,7 +24,6 @@ import {
   checkRankRatios,
   isPromotionEligible,
   calculateSatisfaction,
-  getIdeologyBonuses,
   calculatePrestige,
   generateStudentName,
   secondsToMonths,
@@ -41,7 +34,7 @@ import {
 function createInitialState(): SchoolState {
   const initialStudents: Student[] = [];
   for (let i = 0; i < 3; i++) {
-    initialStudents.push(createStudent(generateStudentName(), 'formalism'));
+    initialStudents.push(createStudent(generateStudentName()));
   }
 
   return {
@@ -53,7 +46,6 @@ function createInitialState(): SchoolState {
       prestige: 0,
     },
     config: {
-      ideology: 'formalism',
       maxCapacity: 5,
       prestigeBuffs: [],
     },
@@ -91,11 +83,10 @@ function calcTheoremProgress(
     }
   }
 
-  const bonuses = getIdeologyBonuses(getStore().config.ideology);
   const baseRate = 100 / active.theorem.baseTime;
   const statsMult = Math.max(0.1, totalStats * 0.1);
 
-  return baseRate * statsMult * bonuses.theoremSpeed;
+  return baseRate * statsMult * statsMult;
 }
 
 function studentTotalStats(s: Student): number {
@@ -115,7 +106,6 @@ interface SchoolStore extends SchoolState {
   assignFields: (studentId: string, fields: ResearchField[]) => void;
   assignMentor: (studentId: string, mentorId: string | null) => void;
   retire: () => void;
-  setIdeology: (ideology: SchoolIdeology) => void;
   setGameSpeed: (speed: number) => void;
   clearEventLog: () => void;
   exportSave: () => string;
@@ -225,13 +215,10 @@ export const useSchoolStore = create<SchoolStore>()(
           newState.activeTheorems = stillActive;
 
           // --- Award resources for completed theorems ---
-          const bonuses = getIdeologyBonuses(newState.config.ideology);
           for (const completedTheorem of completed) {
-            const qMult = bonuses.theoremQuality;
-            const tEarned = completedTheorem.theorem.theoremValue * qMult;
-            const mEarned = completedTheorem.theorem.moneyValue * qMult;
-            const rEarned =
-              completedTheorem.theorem.reputationValue * bonuses.reputationGain;
+            const tEarned = completedTheorem.theorem.theoremValue;
+            const mEarned = completedTheorem.theorem.moneyValue;
+            const rEarned = completedTheorem.theorem.reputationValue;
 
             newState.resources = {
               theorems: prev.resources.theorems + tEarned,
@@ -278,7 +265,6 @@ export const useSchoolStore = create<SchoolStore>()(
             ) {
               const next = getNextTheorem(
                 provedIds,
-                newState.config.ideology,
                 new Set(student.assignedFields)
               );
               if (next) {
@@ -310,7 +296,7 @@ export const useSchoolStore = create<SchoolStore>()(
         const cost = 20 + students.length * 5;
         if (resources.money < cost) return;
 
-        const newStudent = createStudent(generateStudentName(), config.ideology);
+        const newStudent = createStudent(generateStudentName());
 
         set((prev) => ({
           ...prev,
@@ -437,8 +423,8 @@ export const useSchoolStore = create<SchoolStore>()(
         set({
           generation: state.generation + 1,
           students: [
-            createStudent(generateStudentName(), state.config.ideology),
-            createStudent(generateStudentName(), state.config.ideology),
+            createStudent(generateStudentName()),
+            createStudent(generateStudentName()),
           ],
           resources: {
             theorems: state.resources.theorems,
@@ -466,50 +452,6 @@ export const useSchoolStore = create<SchoolStore>()(
             }))),
           ],
         });
-      },
-
-      // ===================================================================
-      // Ideology
-      // ===================================================================
-      setIdeology: (ideology: SchoolIdeology) => {
-        const state = get();
-        if (state.config.ideology === ideology) return;
-
-        // Cost: same-category = 50, different = 100
-        const categories: Record<SchoolIdeology, number> = {
-          formalism: 1,
-          intuitionism: 2,
-          platonism: 3,
-        };
-        const cost =
-          categories[state.config.ideology] === categories[ideology]
-            ? 50
-            : 100;
-        if (state.resources.reputation < cost) return;
-
-        set((prev) => ({
-          ...prev,
-          config: { ...prev.config, ideology },
-          resources: {
-            ...prev.resources,
-            reputation: prev.resources.reputation - cost,
-          },
-          eventLog: [
-            ...prev.eventLog,
-            {
-              id: generateId(),
-              type: 'ideology',
-              message: `📜 Philosophy changed to ${IDEOLOGY_DATA[ideology].name}.`,
-              timestamp: prev.totalMonthsPlayed,
-            },
-            ...getQuotesForTrigger('ideology_switch').map((text) => ({
-              id: generateId(),
-              type: 'quote' as const,
-              message: text,
-              timestamp: prev.totalMonthsPlayed,
-            })),
-          ],
-        }));
       },
 
       // ===================================================================

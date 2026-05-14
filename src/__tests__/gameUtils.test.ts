@@ -5,7 +5,6 @@
 import { describe, it, expect } from 'vitest';
 import type {
   Student,
-  SchoolIdeology,
   ResearchField,
   StudentRank,
 } from '../types/game';
@@ -22,8 +21,7 @@ import {
   monthsToSeconds,
   getTotalStats,
 } from '../utils/gameUtils';
-import { IDEOLOGY_DATA, RANK_LABELS, RANK_EMOJI, DEFAULT_RATIOS, TRAITS } from '../types/game';
-import { getIdeologyBonuses } from '../utils/gameUtils';
+import { RANK_LABELS, RANK_EMOJI, DEFAULT_RATIOS, TRAITS } from '../types/game';
 
 // --- createStudent tests ---
 
@@ -234,31 +232,6 @@ describe('calculateSatisfaction', () => {
     const result = calculateSatisfaction(student, [student]);
     expect(result).toBeGreaterThanOrEqual(0);
     expect(result).toBeLessThanOrEqual(100);
-  });
-});
-
-// --- getIdeologyBonuses tests ---
-
-describe('getIdeologyBonuses', () => {
-  it('formalism gives speed bonus', () => {
-    const bonuses = getIdeologyBonuses('formalism');
-    expect(bonuses.theoremSpeed).toBe(1.2);
-    expect(bonuses.extraFields).toBe(1);
-    expect(bonuses.theoremQuality).toBe(0.9);
-  });
-
-  it('intuitionism gives quality bonus', () => {
-    const bonuses = getIdeologyBonuses('intuitionism');
-    expect(bonuses.theoremQuality).toBe(1.15);
-    expect(bonuses.startingStatPoints).toBe(1);
-    expect(bonuses.theoremSpeed).toBe(1.0);
-  });
-
-  it('platonism gives reputation and capacity bonus', () => {
-    const bonuses = getIdeologyBonuses('platonism');
-    expect(bonuses.reputationGain).toBe(1.25);
-    expect(bonuses.maxCapacity).toBe(1);
-    expect(bonuses.theoremSpeed).toBe(0.85);
   });
 });
 

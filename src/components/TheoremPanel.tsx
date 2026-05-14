@@ -23,7 +23,7 @@ const TIER_NAMES: Record<TheoremTier, string> = {
 };
 
 export function TheoremPanel() {
-  const { activeTheorems, currentTheorems, config } = useSchoolStore();
+  const { activeTheorems, currentTheorems } = useSchoolStore();
 
   return (
     <div className="theorem-pipeline">
@@ -124,7 +124,7 @@ export function TheoremPanel() {
 }
 
 function NextTheoremPreview() {
-  const { students, config, currentTheorems } = useSchoolStore();
+  const { students, currentTheorems } = useSchoolStore();
   const provedIds = new Set(currentTheorems.map((t) => t.theorem.id));
 
   // Find the best available theorem for any student with fields assigned
@@ -135,7 +135,6 @@ function NextTheoremPreview() {
     if (student.assignedFields.length === 0) continue;
     const available = getNextTheorem(
       provedIds,
-      config.ideology,
       new Set(student.assignedFields)
     );
     if (available && (!nextTheorem || available.baseTime < nextTheorem.baseTime)) {

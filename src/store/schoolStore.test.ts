@@ -2,12 +2,11 @@
 // Unit tests for school store logic (vanilla store, no persist middleware)
 // =============================================================================
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { create } from 'zustand';
-import type { SchoolState, Student, SchoolIdeology, ResearchField } from '../types/game';
-import { createStudent, checkRankRatios, isPromotionEligible, calculateSatisfaction, getIdeologyBonuses, calculatePrestige, generateStudentName, secondsToMonths, getTotalStats } from '../utils/gameUtils';
-import { IDEOLOGY_DATA, DEFAULT_RATIOS } from '../types/game';
-import { getQuotesForTrigger } from '../data/personality';
+import type { SchoolState, Student, ResearchField } from '../types/game';
+import { createStudent, checkRankRatios, isPromotionEligible, calculateSatisfaction, calculatePrestige, generateStudentName, getTotalStats } from '../utils/gameUtils';
+import { DEFAULT_RATIOS } from '../types/game';
 import { ALL_THEOREMS } from '../data/theorems';
 
 // --- Helper: create a vanilla store for testing (no persist) ---
@@ -15,11 +14,11 @@ function createTestStore(initial?: Partial<SchoolState>) {
   const defaults: SchoolState = {
     generation: 1,
     resources: { theorems: 5, money: 100, reputation: 10, prestige: 0 },
-    config: { ideology: 'formalism', maxCapacity: 5, prestigeBuffs: [] },
+    config: { maxCapacity: 5, prestigeBuffs: [] },
     students: [
-      createStudent(generateStudentName(), 'formalism'),
-      createStudent(generateStudentName(), 'formalism'),
-      createStudent(generateStudentName(), 'formalism'),
+      createStudent(generateStudentName()),
+      createStudent(generateStudentName()),
+      createStudent(generateStudentName()),
     ],
     currentTheorems: [],
     activeTheorems: [],
@@ -34,7 +33,6 @@ function createTestStore(initial?: Partial<SchoolState>) {
     promoteStudent: (id: string) => void;
     assignFields: (id: string, fields: ResearchField[]) => void;
     setGameSpeed: (speed: number) => void;
-    setIdeology: (ideology: SchoolIdeology) => void;
     retire: () => void;
   }>((set, get) => ({
     ...defaults,
@@ -46,7 +44,7 @@ function createTestStore(initial?: Partial<SchoolState>) {
       const cost = 20 + state.students.length * 5;
       if (state.resources.money < cost) return;
 
-      const newStudent = createStudent(generateStudentName(), state.config.ideology);
+      const newStudent = createStudent(generateStudentName());
       set((prev) => ({
         ...prev,
         students: [...prev.students, newStudent],
@@ -63,10 +61,11 @@ function createTestStore(initial?: Partial<SchoolState>) {
       const student = state.students.find((s) => s.id === studentId);
       if (!student) return;
 
-      const targetRank = student.rank === 'student' ? 'assistant' : 'associate';
+      const targetRank = student.rank === 'student' ? 'assistant' :
+                         student.rank === 'assistant' ? 'associate' : 'professor';
       if (!isPromotionEligible(student, targetRank)) return;
 
-      const ratios = checkRankRatios(state.students);
+      const ratios = checkRankRatios(state.students, DEFAULT_RATIOS, targetRank);
       if (!ratios.canPromote) return;
 
       set((prev) => ({
@@ -96,31 +95,9 @@ function createTestStore(initial?: Partial<SchoolState>) {
       set({ gameSpeed: speed });
     },
 
-    setIdeology: (ideology: SchoolIdeology) => {
-      const state = get();
-      if (state.config.ideology === ideology) return;
-
-      const categories: Record<SchoolIdeology, number> = { formalism: 1, intuitionism: 2, platonism: 3 };
-      const cost = categories[state.config.ideology] === categories[ideology] ? 50 : 100;
-      if (state.resources.reputation < cost) return;
-
-      set((prev) => ({
-        ...prev,
-        config: { ...prev.config, ideology },
-        resources: { ...prev.resources, reputation: prev.resources.reputation - cost },
-        eventLog: [
-          ...prev.eventLog,
-          { id: `ideo_${Date.now()}`, type: 'ideology', message: `Philosophy: ${IDEOLOGY_DATA[ideology].name}.`, timestamp: prev.totalMonthsPlayed },
-          ...getQuotesForTrigger('ideology_switch').map((text, i) => ({
-            id: `quote_${Date.now()}_${i}`, type: 'quote', message: text, timestamp: prev.totalMonthsPlayed,
-          })),
-        ],
-      }));
-    },
-
     retire: () => {
       const state = get();
-      const associates = state.students.filter((s) => s.rank === 'associate');
+      const associates = state.students.filter((s) => s.rank === 'associate' || s.rank === 'professor');
       if (associates.length === 0) return;
 
       const total = associates.reduce((s, a) => s + getTotalStats(a), 0);
@@ -133,7 +110,7 @@ function createTestStore(initial?: Partial<SchoolState>) {
 
       const prestigeEarned = calculatePrestige(
         state.currentTheorems.length,
-        state.currentTheorems.reduce((max, t) => Math.max(max, t.theorem.tier), 1),
+        state.currentTheorems.length > 0 ? state.currentTheorems[0].theorem.tier : 1,
         state.totalMonthsPlayed / 12,
         state.students.filter((s) => s.rank !== 'student').length,
         state.resources.reputation
@@ -141,7 +118,7 @@ function createTestStore(initial?: Partial<SchoolState>) {
 
       set({
         generation: state.generation + 1,
-        students: [createStudent(generateStudentName(), state.config.ideology)],
+        students: [createStudent(generateStudentName()), createStudent(generateStudentName())],
         resources: {
           theorems: state.resources.theorems,
           money: state.resources.money,
@@ -183,11 +160,6 @@ describe('initial state', () => {
     expect(store.getState().generation).toBe(1);
   });
 
-  it('starts in formalism ideology', () => {
-    const store = createTestStore();
-    expect(store.getState().config.ideology).toBe('formalism');
-  });
-
   it('starts at normal game speed', () => {
     const store = createTestStore();
     expect(store.getState().gameSpeed).toBe(1);
@@ -204,7 +176,7 @@ describe('hireStudent', () => {
 
   it('does not hire when at capacity', () => {
     const store = createTestStore();
-    store.setState({ config: { ideology: 'formalism', maxCapacity: 3, prestigeBuffs: [] } });
+    store.setState({ config: { maxCapacity: 3, prestigeBuffs: [] } });
     const before = store.getState().students.length;
     store.getState().hireStudent();
     expect(store.getState().students.length).toBe(before);
@@ -249,7 +221,7 @@ describe('promoteStudent', () => {
   it('promotes eligible student', () => {
     const store = createTestStore();
     // Use 10 students so ratios work (30% of 10 = 3 associates max)
-    const extraStudents = Array.from({ length: 7 }, () => createStudent(generateStudentName(), 'formalism'));
+    const extraStudents = Array.from({ length: 7 }, () => createStudent(generateStudentName()));
     store.setState((s) => ({
       ...s,
       students: [
@@ -289,40 +261,8 @@ describe('setGameSpeed', () => {
   });
 });
 
-describe('setIdeology', () => {
-  it('sets a new ideology', () => {
-    const store = createTestStore();
-    // Formalism → Intuitionism is same-category (cost 50), or give enough reputation
-    store.setState((s) => ({ ...s, resources: { ...s.resources, reputation: 200 } }));
-    store.getState().setIdeology('intuitionism');
-    expect(store.getState().config.ideology).toBe('intuitionism');
-  });
-
-  it('requires reputation', () => {
-    const store = createTestStore();
-    store.setState((s) => ({ ...s, resources: { ...s.resources, reputation: 1 } }));
-    store.getState().setIdeology('intuitionism');
-    expect(store.getState().config.ideology).toBe('formalism');
-  });
-
-  it('reduces reputation', () => {
-    const store = createTestStore();
-    store.setState((s) => ({ ...s, resources: { ...s.resources, reputation: 200 } }));
-    const before = store.getState().resources.reputation;
-    store.getState().setIdeology('intuitionism');
-    expect(store.getState().resources.reputation).toBeLessThan(before);
-  });
-
-  it('adds ideology event', () => {
-    const store = createTestStore();
-    store.setState((s) => ({ ...s, resources: { ...s.resources, reputation: 200 } }));
-    store.getState().setIdeology('intuitionism');
-    expect(store.getState().eventLog.find((e) => e.type === 'ideology')).toBeDefined();
-  });
-});
-
 describe('retire', () => {
-  it('does nothing without associate professors', () => {
+  it('does nothing without associate/professor', () => {
     const store = createTestStore();
     store.setState((s) => ({ ...s, students: s.students.map((st) => ({ ...st, rank: 'student' as const })) }));
     const beforeGen = store.getState().generation;
@@ -330,7 +270,7 @@ describe('retire', () => {
     expect(store.getState().generation).toBe(beforeGen);
   });
 
-  it('advances generation with an associate professor', () => {
+  it('advances generation with an associate', () => {
     const store = createTestStore();
     store.setState((s) => ({
       ...s,

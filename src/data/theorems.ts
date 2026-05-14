@@ -104,30 +104,21 @@ export const ALL_THEOREMS: Theorem[] = [
   ...TIER_5_THEOREMS.map((t, i) => ({ ...t, id: `t5_${i}` })),
 ];
 
-export function getAvailableTheorems(provedIds: Set<string>, ideology: string): Theorem[] {
-  const available = ALL_THEOREMS.filter((t) => !provedIds.has(t.id));
-  
-  // Intuitionism: cannot prove excluded-middle-based theorems
-  // For now, we restrict Tier 3+ Set Theory theorems for intuitionists
-  if (ideology === 'intuitionism') {
-    return available.filter((t) => !(t.tier >= 3 && t.fields.includes('Set Theory')));
-  }
-  
-  return available;
+export function getAvailableTheorems(provedIds: Set<string>): Theorem[] {
+  return ALL_THEOREMS.filter((t) => !provedIds.has(t.id));
 }
 
 export function getNextTheorem(
   provedIds: Set<string>,
-  ideology: string,
   assignedFields: Set<ResearchField>
 ): Theorem | null {
-  const available = getAvailableTheorems(provedIds, ideology).filter((t) =>
+  const available = getAvailableTheorems(provedIds).filter((t) =>
     t.fields.some((f) => assignedFields.has(f))
   );
-  
+
   if (available.length === 0) return null;
-  
-  // Sort by tier (prefer lower tiers first), then by baseTime (prefer faster)
+
+  // Sort by baseTime (prefer faster), then by tier
   available.sort((a, b) => a.baseTime - b.baseTime || a.tier - b.tier);
   return available[0];
 }

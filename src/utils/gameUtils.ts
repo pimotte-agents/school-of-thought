@@ -7,12 +7,10 @@ import type {
   StudentRank,
   Resources,
   RankRatios,
-  SchoolIdeology,
-  IdeologyInfo,
   TheoremTier,
   TraitId,
 } from '../types/game';
-import { IDEOLOGY_DATA, RANK_LABELS, RANK_EMOJI, DEFAULT_RATIOS, TRAITS } from '../types/game';
+import { RANK_LABELS, RANK_EMOJI, DEFAULT_RATIOS, TRAITS } from '../types/game';
 import { FIRST_NAMES, LAST_NAMES } from '../data/personality';
 
 // --- ID Generation ---
@@ -25,15 +23,13 @@ export function generateId(): string {
 
 // --- Student Creation ---
 
-export function createStudent(
-  name: string,
-  ideology: SchoolIdeology
-): Student {
-  // Starting stats depend on ideology (platonism attracts better students)
-  const baseStats = generateBaseStats(ideology);
-
-  // Apply ideology bonus: intuitionism gives +1 starting stat point to distribute
-  const statBonus = ideology === 'intuitionism' ? 1 : 0;
+export function createStudent(name: string): Student {
+  // Base stats: 1-3 per stat
+  const baseStats = {
+    rigor: Math.floor(Math.random() * 3) + 1,
+    creativity: Math.floor(Math.random() * 3) + 1,
+    teaching: Math.floor(Math.random() * 2) + 1,
+  };
 
   // Random traits (1-2 traits)
   const numTraits = Math.random() < 0.3 ? 2 : 1;
@@ -76,27 +72,6 @@ export function createStudent(
     lastActiveQuote: null,
     lastQuoteDate: 0,
   };
-}
-
-function generateBaseStats(ideology: SchoolIdeology): { rigor: number; creativity: number; teaching: number } {
-  // Base stats: 1-3 per stat
-  const base = {
-    rigor: Math.floor(Math.random() * 3) + 1,
-    creativity: Math.floor(Math.random() * 3) + 1,
-    teaching: Math.floor(Math.random() * 2) + 1,
-  };
-
-  // Platonism: better average stats
-  if (ideology === 'platonism') {
-    if (Math.random() < 0.5) {
-      base.rigor = Math.min(4, base.rigor + 1);
-    }
-    if (Math.random() < 0.5) {
-      base.creativity = Math.min(4, base.creativity + 1);
-    }
-  }
-
-  return base;
 }
 
 
@@ -239,31 +214,6 @@ export function calculateSatisfaction(
 
 export function getTotalStats(student: Student): number {
   return student.stats.rigor + student.stats.creativity + student.stats.teaching;
-}
-
-// --- Ideology ---
-
-export function getIdeologyInfo(ideology: SchoolIdeology): IdeologyInfo {
-  return IDEOLOGY_DATA[ideology];
-}
-
-export function getIdeologyBonuses(ideology: SchoolIdeology): {
-  theoremSpeed: number;
-  theoremQuality: number;
-  reputationGain: number;
-  extraFields: number;
-  startingStatPoints: number;
-  maxCapacity: number;
-} {
-  const bonuses = IDEOLOGY_DATA[ideology].bonuses;
-  return {
-    theoremSpeed: bonuses.theoremSpeed ?? 1.0,
-    theoremQuality: bonuses.theoremQuality ?? 1.0,
-    reputationGain: bonuses.reputationGain ?? 1.0,
-    extraFields: bonuses.extraFields ?? 0,
-    startingStatPoints: bonuses.startingStatPoints ?? 0,
-    maxCapacity: bonuses.maxCapacity ?? 0,
-  };
 }
 
 // --- Prestige Calculation ---

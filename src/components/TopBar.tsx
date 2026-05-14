@@ -70,13 +70,6 @@ export function TopBar({ onTogglePause, onCycleSpeed }: TopBarProps) {
     },
   ];
 
-  const ideos = ['formalism', 'intuitionism', 'platonism'] as const;
-  const ideologyIcons: Record<string, string> = {
-    formalism: '🔷',
-    intuitionism: '🔶',
-    platonism: '🔵',
-  };
-
   return (
     <header className="top-bar">
       {/* Resources */}
@@ -107,14 +100,6 @@ export function TopBar({ onTogglePause, onCycleSpeed }: TopBarProps) {
         <span className="meta-item">
           <span className="meta-label">Time</span>
           <span className="meta-value">{years}y {months}m</span>
-        </span>
-
-        {/* Ideology */}
-        <span className="meta-item ideology">
-          <span className="ideology-icon">{ideologyIcons[config.ideology]}</span>
-          <span className="meta-label">
-            {config.ideology.charAt(0).toUpperCase() + config.ideology.slice(1)}
-          </span>
         </span>
 
         {/* Student Count */}

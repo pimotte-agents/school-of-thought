@@ -31,60 +31,6 @@ export const INITIAL_UNLOCKED_FIELDS: ResearchField[] = [
   'Proof Theory',
 ];
 
-// --- Ideologies ---
-
-export type SchoolIdeology = 'formalism' | 'intuitionism' | 'platonism';
-
-export interface IdeologyInfo {
-  id: SchoolIdeology;
-  name: string;
-  tagline: string;
-  description: string;
-  bonuses: Record<string, number>;
-  restrictions?: string[];
-}
-
-export const IDEOLOGY_DATA: Record<SchoolIdeology, IdeologyInfo> = {
-  formalism: {
-    id: 'formalism',
-    name: 'Formalism',
-    tagline: '"Mathematics is a game of symbol manipulation."',
-    description:
-      'If we can prove it, it\'s true. Bonus to automation speed and concurrent fields, but lower theorem quality.',
-    bonuses: {
-      theoremSpeed: 1.2,
-      extraFields: 1,
-      theoremQuality: 0.9,
-    },
-  },
-  intuitionism: {
-    id: 'intuitionism',
-    name: 'Intuitionism',
-    tagline: '"A theorem exists only if we can construct it."',
-    description:
-      'Higher quality theorems and bonus starting stats, but cannot prove excluded-middle-based theorems.',
-    bonuses: {
-      theoremQuality: 1.15,
-      startingStatPoints: 1,
-      theoremSpeed: 1.0,
-      extraFields: 0,
-    },
-  },
-  platonism: {
-    id: 'platonism',
-    name: 'Platonism',
-    tagline: '"Mathematical objects exist independently. We discover them."',
-    description:
-      'Faster reputation gain and better students, but slower theorem production.',
-    bonuses: {
-      reputationGain: 1.25,
-      maxCapacity: 1,
-      theoremSpeed: 0.85,
-      extraFields: 0,
-    },
-  },
-};
-
 // --- Student Ranks ---
 
 export type StudentRank = 'student' | 'assistant' | 'associate' | 'professor';
@@ -206,7 +152,6 @@ export interface Resources {
 // --- School State ---
 
 export interface SchoolConfig {
-  ideology: SchoolIdeology;
   maxCapacity: number;
   prestigeBuffs: PrestigeBuffState[];
 }
@@ -247,7 +192,7 @@ export interface ActiveTheorem {
 
 export interface EventEntry {
   id: string;
-  type: 'quote' | 'promotion' | 'hire' | 'departure' | 'theorem' | 'event' | 'retirement' | 'ideology';
+  type: 'quote' | 'promotion' | 'hire' | 'departure' | 'theorem' | 'event' | 'retirement';
   message: string;
   timestamp: number; // game time in months
   studentId?: string;

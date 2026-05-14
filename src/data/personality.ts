@@ -32,7 +32,6 @@ export type QuoteTrigger =
   | 'stagnation'
   | 'rank_inversion'
   | 'idle'
-  | 'ideology_switch'
   | 'retirement';
 
 export const QUOTES: QuoteEntry[] = [
@@ -123,17 +122,6 @@ export const QUOTES: QuoteEntry[] = [
       "The beauty of a clean proof is unmatched.",
       "I keep coming back to this problem. It won't let me go.",
       "Do you think Gödel would have enjoyed this game?",
-    ],
-  },
-  // Ideology switch
-  {
-    trigger: 'ideology_switch',
-    texts: [
-      "A new direction for the school. Exciting but unsettling.",
-      "So we're changing philosophies now. Interesting choice.",
-      "I'll adapt. Every school of thought has something to offer.",
-      "This shift in direction will take some getting used to.",
-      "A fresh ideological approach. Let's see where it leads.",
     ],
   },
   // Retirement / succession

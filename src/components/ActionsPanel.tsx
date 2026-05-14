@@ -1,34 +1,18 @@
 // =============================================================================
-// ActionsPanel — Hire, retire, ideology, save/export/import
+// ActionsPanel — Hire, retire, save/export/import
 // =============================================================================
 
 import { useState, useRef, type ChangeEvent } from 'react';
-import { IDEOLOGY_DATA } from '../types/game';
-import type { SchoolIdeology } from '../types/game';
 import { useSchoolStore } from '../store/schoolStore';
-
-const IDEOLOGY_ICONS: Record<SchoolIdeology, string> = {
-  formalism: '🔷',
-  intuitionism: '🔶',
-  platonism: '🔵',
-};
-
-const IDEOLOGY_COSTS: Record<SchoolIdeology, number> = {
-  formalism: 50,
-  intuitionism: 100,
-  platonism: 100,
-};
 
 export function ActionsPanel() {
   const {
     hireStudent,
     retire,
-    setIdeology,
     setGameSpeed,
     clearEventLog,
     exportSave,
     importSave,
-    config,
     resources,
     gameSpeed,
     students,
@@ -49,24 +33,6 @@ export function ActionsPanel() {
     const speeds = [0, 1, 5] as const;
     const nextIdx = (speeds.indexOf(gameSpeed) + 1) % speeds.length;
     setGameSpeed(speeds[nextIdx]);
-  };
-
-  const handleIdeologyChange = (ideology: SchoolIdeology) => {
-    if (ideology === config.ideology) return;
-    const categories: Record<SchoolIdeology, number> = {
-      formalism: 1,
-      intuitionism: 2,
-      platonism: 3,
-    };
-    const cost =
-      categories[config.ideology] === categories[ideology] ? 50 : 100;
-    if (resources.reputation < cost) {
-      alert(`Need ${cost} reputation to switch (have ${resources.reputation})`);
-      return;
-    }
-    if (confirm(`Switch to ${IDEOLOGY_DATA[ideology].name}? Costs ${cost} reputation.`)) {
-      setIdeology(ideology);
-    }
   };
 
   const handleExport = () => {
@@ -152,54 +118,6 @@ export function ActionsPanel() {
               {speed === 0 ? '⏸' : speed === 1 ? '▶' : '⏩⏩'}
             </button>
           ))}
-        </div>
-      </div>
-
-      {/* Ideology */}
-      <div className="panel-section ideology-section">
-        <h2>Philosophy</h2>
-        <div className="ideology-options">
-          {(Object.keys(IDEOLOGY_DATA) as SchoolIdeology[]).map((ideo) => {
-            const data = IDEOLOGY_DATA[ideo];
-            const bonuses = data.bonuses;
-            const isActive = config.ideology === ideo;
-            const categories: Record<SchoolIdeology, number> = {
-              formalism: 1,
-              intuitionism: 2,
-              platonism: 3,
-            };
-            const currentCategory = categories[config.ideology];
-            const targetCategory = categories[ideo];
-            const cost = currentCategory === targetCategory ? 50 : 100;
-            const canAfford = resources.reputation >= cost;
-
-            return (
-              <div
-                key={ideo}
-                className={`ideology-option ${isActive ? 'active' : ''} ${!canAfford && !isActive ? 'locked' : ''}`}
-                onClick={() => handleIdeologyChange(ideo)}
-              >
-                <div className="ideology-option-header">
-                  <span className="ideology-icon">{IDEOLOGY_ICONS[ideo]}</span>
-                  <span className="ideology-name">{data.name}</span>
-                  {isActive && <span className="active-badge">✓</span>}
-                </div>
-                <p className="ideology-tagline">{data.tagline}</p>
-                <div className="ideology-stats">
-                  <span>Speed: {bonuses.theoremSpeed * 100}%</span>
-                  <span>Quality: {bonuses.theoremQuality * 100}%</span>
-                  {bonuses.reputationGain && (
-                    <span>Rep: {bonuses.reputationGain * 100}%</span>
-                  )}
-                </div>
-                {!isActive && (
-                  <span className="ideology-cost">
-                    Cost: {cost} ⭐ {canAfford ? '' : '(insufficient)'}
-                  </span>
-                )}
-              </div>
-            );
-          })}
         </div>
       </div>
 
