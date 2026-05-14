@@ -6,12 +6,16 @@ import { useRef, type DragEvent, type MouseEvent } from 'react';
 import { useSchoolStore } from '../store/schoolStore';
 import { RANK_LABELS, RANK_EMOJI } from '../types/game';
 import { getRankColor } from '../utils/gameUtils';
+import type { Student } from '../types/game';
 
 export function MentorshipPanel() {
   const { students, assignMentor } = useSchoolStore();
   const clearRef = useRef<HTMLDivElement>(null);
 
-  const staff = students.filter((s) => s.rank !== 'student');
+  const staff = students.filter((s): s is Student => s.rank !== 'student');
+
+  const rankOrder = (rank: StudentRank) =>
+    rank === 'student' ? 0 : rank === 'assistant' ? 1 : rank === 'associate' ? 2 : 3;
 
   const handleDragStart = (e: DragEvent, id: string) => {
     e.dataTransfer.setData('menteeId', id);
@@ -35,14 +39,7 @@ export function MentorshipPanel() {
     const mentor = state.students.find((s) => s.id === mentorId);
     if (!mentor || mentor.rank === 'student') return;
 
-    const mentorRank = state.students.reduce((a, s) => {
-      const order = s.rank === 'student' ? 0 : s.rank === 'assistant' ? 1 : s.rank === 'associate' ? 2 : 3;
-      return Math.max(a, order);
-    }, 0);
-
-    const menteeRank = mentee.rank === 'student' ? 0 : mentee.rank === 'assistant' ? 1 : mentee.rank === 'associate' ? 2 : 3;
-
-    if (mentorRank <= menteeRank) return;
+    if (rankOrder(mentor.rank) <= rankOrder(mentee.rank)) return;
 
     assignMentor(menteeId, mentorId);
   };
@@ -59,12 +56,6 @@ export function MentorshipPanel() {
     if (mentee.mentorId) {
       assignMentor(menteeId, null);
     }
-  };
-
-  const handleDragLeaveClear = (e: DragEvent) => {
-    const related = e.relatedTarget as Node | null;
-    if (clearRef.current && clearRef.current.contains(related)) return;
-    // Reset visual state if needed
   };
 
   if (staff.length === 0) {

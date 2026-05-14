@@ -263,3 +263,10 @@ export function secondsToMonths(seconds: number): number {
 export function monthsToSeconds(months: number): number {
   return months * SECONDS_PER_GAME_MONTH;
 }
+
+export function getRankColor(rank: string): string {
+  if (rank === 'professor') return '#f59e0b';
+  if (rank === 'associate') return '#c084fc';
+  if (rank === 'assistant') return '#537895';
+  return '#2a2a4a';
+}
