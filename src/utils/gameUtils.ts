@@ -124,7 +124,8 @@ export function checkRankRatios(
 
   if (targetRank && ratioKeyMap[targetRank]) {
     const maxPercent = ratios[ratioKeyMap[targetRank]];
-    if (ranks[targetRank] + 1 > Math.floor(total * maxPercent)) {
+    const maxCount = Math.max(1, Math.floor(total * maxPercent));
+    if (ranks[targetRank] + 1 > maxCount) {
       return { canPromote: false, reason: `${targetRank} ratio would exceed ${Math.round(maxPercent * 100)}%` };
     }
     return { canPromote: true, reason: '' };
@@ -132,13 +133,13 @@ export function checkRankRatios(
 
   // Without a target rank: check if any promotion is possible.
   // Only check a rank's ratio if there are students at a lower rank who could be promoted to it.
-  if (ranks.associate > 0 && ranks.professor + 1 > Math.floor(total * ratios.professorMaxPercent)) {
+  if (ranks.associate > 0 && ranks.professor + 1 > Math.max(1, Math.floor(total * ratios.professorMaxPercent))) {
     return { canPromote: false, reason: `Professor ratio would exceed ${Math.round(ratios.professorMaxPercent * 100)}%` };
   }
-  if (ranks.assistant > 0 && ranks.associate + 1 > Math.floor(total * ratios.associateMaxPercent)) {
+  if (ranks.assistant > 0 && ranks.associate + 1 > Math.max(1, Math.floor(total * ratios.associateMaxPercent))) {
     return { canPromote: false, reason: `Associate ratio would exceed ${Math.round(ratios.associateMaxPercent * 100)}%` };
   }
-  if (ranks.student > 0 && ranks.assistant + 1 > Math.floor(total * ratios.assistantMaxPercent)) {
+  if (ranks.student > 0 && ranks.assistant + 1 > Math.max(1, Math.floor(total * ratios.assistantMaxPercent))) {
     return { canPromote: false, reason: `Assistant ratio would exceed ${Math.round(ratios.assistantMaxPercent * 100)}%` };
   }
 

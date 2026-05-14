@@ -108,14 +108,18 @@ describe('checkRankRatios', () => {
       createStudent('S', 'formalism'),
       createStudent('S', 'formalism'),
       createStudent('S', 'formalism'),
+      createStudent('S', 'formalism'),
+      createStudent('S', 'formalism'),
     ] as unknown as Student[];
 
-    // Simulate 3 out of 5 are already associates (60%, exceeds 30%)
+    // 3 out of 5 are associates (60%, exceeds 30% cap)
     (students[0] as any).rank = 'associate';
     (students[1] as any).rank = 'associate';
     (students[2] as any).rank = 'associate';
+    (students[3] as any).rank = 'assistant';
+    (students[4] as any).rank = 'student';
 
-    const result = checkRankRatios(students as Student[]);
+    const result = checkRankRatios(students as Student[], DEFAULT_RATIOS, 'associate');
     expect(result.canPromote).toBe(false);
   });
 
@@ -124,13 +128,17 @@ describe('checkRankRatios', () => {
       createStudent('S', 'formalism'),
       createStudent('S', 'formalism'),
       createStudent('S', 'formalism'),
+      createStudent('S', 'formalism'),
+      createStudent('S', 'formalism'),
     ] as unknown as Student[];
 
     (students[0] as any).rank = 'associate';
     (students[1] as any).rank = 'associate';
     (students[2] as any).rank = 'associate';
+    (students[3] as any).rank = 'assistant';
+    (students[4] as any).rank = 'student';
 
-    const result = checkRankRatios(students as Student[]);
+    const result = checkRankRatios(students as Student[], DEFAULT_RATIOS, 'associate');
     expect(result.reason).toContain('ratio');
   });
 

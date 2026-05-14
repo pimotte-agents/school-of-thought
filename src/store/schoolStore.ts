@@ -338,16 +338,6 @@ export const useSchoolStore = create<SchoolStore>()(
         const ratios = checkRankRatios(state.students, DEFAULT_RATIOS, targetRank);
         if (!ratios.canPromote) return;
 
-        // Check position count for target rank
-        const rankToPosition: Record<StudentRank, PositionId> = {
-          student: 'phd',
-          assistant: 'assistant',
-          associate: 'associate',
-          professor: 'professor',
-        };
-        const currentRankCount = state.students.filter((s) => s.rank === targetRank).length;
-        if (currentRankCount >= state.config.positions[rankToPosition[targetRank]]) return;
-
         set((prev) => ({
           ...prev,
           students: prev.students.map((s) =>

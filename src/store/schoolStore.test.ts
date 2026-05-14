@@ -214,13 +214,25 @@ describe('promoteStudent', () => {
     expect(store.getState().students.find((s) => s.id === id)?.rank).toBe(before);
   });
 
-  it('does nothing if ratio is exceeded', () => {
+  it('does nothing if associate ratio is exceeded', () => {
     const store = createTestStore();
-    store.setState((s) => ({
-      ...s,
-      students: s.students.map((st) => ({ ...st, rank: 'assistant' as const, monthsInRank: 10, theoremsProved: 10 })),
-    }));
-    const id = store.getState().students[0].id;
+    // 3 associates out of 7 students exceeds 30% cap. Student A3 is assistant trying to promote to associate.
+    const extraStudents = Array.from({ length: 2 }, () => createStudent(generateStudentName()));
+    const testStudents: Student[] = [
+      createStudent('A0'),
+      createStudent('A1'),
+      createStudent('A2'),
+      createStudent('A3'),
+      createStudent('A4'),
+      ...extraStudents,
+    ];
+    testStudents[0].rank = 'associate'; testStudents[0].monthsInRank = 10; testStudents[0].theoremsProved = 10;
+    testStudents[1].rank = 'associate'; testStudents[1].monthsInRank = 10; testStudents[1].theoremsProved = 10;
+    testStudents[2].rank = 'associate'; testStudents[2].monthsInRank = 10; testStudents[2].theoremsProved = 10;
+    testStudents[3].rank = 'assistant'; testStudents[3].monthsInRank = 10; testStudents[3].theoremsProved = 10;
+    testStudents[4].rank = 'student';
+    store.setState((s) => ({ ...s, students: testStudents }));
+    const id = testStudents[3].id;
     const before = store.getState().students.find((s) => s.id === id)?.rank;
     store.getState().promoteStudent(id);
     expect(store.getState().students.find((s) => s.id === id)?.rank).toBe(before);
@@ -236,6 +248,26 @@ describe('promoteStudent', () => {
         { ...s.students[0], rank: 'student' as const, monthsInRank: 1, theoremsProved: 1 },
         ...s.students.slice(1),
         ...extraStudents,
+      ],
+    }));
+    const id = store.getState().students[0].id;
+    store.getState().promoteStudent(id);
+    const student = store.getState().students.find((s) => s.id === id);
+    expect(student?.rank).toBe('assistant');
+  });
+
+  it('promotes student to assistant even with 0 assistant positions (regression)', () => {
+    // Positions system should gate PhD hiring, not promotion. Promotion is gated by ratios.
+    const store = createTestStore();
+    // Ensure positions are 0 for assistant (default state)
+    const positions = store.getState().config.positions;
+    expect(positions.assistant).toBe(0);
+    // Make student eligible: ≥1 month, ≥1 theorem
+    store.setState((s) => ({
+      ...s,
+      students: [
+        { ...s.students[0], rank: 'student' as const, monthsInRank: 2, theoremsProved: 2 },
+        ...s.students.slice(1),
       ],
     }));
     const id = store.getState().students[0].id;
