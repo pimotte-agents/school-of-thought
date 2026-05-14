@@ -62,36 +62,37 @@ export function StudentCard({ student, isSelected, onClick }: StudentCardProps) 
 
   const totalStats = student.stats.rigor + student.stats.creativity + student.stats.teaching;
 
-  // Drag handlers
+  // Drag handlers — students are dragged onto mentors
   const handleDragStart = (e: React.DragEvent) => {
-    // Only non-student staff can be dragged as mentors
-    if (!isStaff) return;
     e.dataTransfer.setData('studentId', student.id);
     e.dataTransfer.effectAllowed = 'move';
   };
 
-  // Drop handler — only higher-rank staff can receive mentors
+  // Drop target — only staff can receive students as mentees
+  const canDrop = isStaff;
   const handleDragOver = (e: React.DragEvent) => {
+    if (!canDrop) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
   };
 
   const handleDrop = (e: React.DragEvent) => {
+    if (!canDrop) return;
     e.preventDefault();
     const draggedId = e.dataTransfer.getData('studentId');
     if (!draggedId || draggedId === student.id) return;
 
     const targetRankOrder = RANK_ORDER[student.rank];
 
-    // Check that dragged student is higher rank (mentor > mentee)
+    // Check that target (mentor) is higher rank than dragged (mentee)
     const dragState = useSchoolStore.getState();
     const draggedStudent = dragState.students.find((s) => s.id === draggedId);
     if (!draggedStudent) return;
 
     const draggedRankOrder = RANK_ORDER[draggedStudent.rank];
-    if (draggedRankOrder <= targetRankOrder) return; // mentor must be higher rank
+    if (targetRankOrder <= draggedRankOrder) return; // mentor must be strictly higher rank
 
-    // Set this student as the dragged student's mentor
+    // Assign the target (this staff) as the mentor of the dragged student
     assignMentor(draggedId, student.id);
   };
 
@@ -140,7 +141,7 @@ export function StudentCard({ student, isSelected, onClick }: StudentCardProps) 
       className={`student-card rank-${student.rank}${isSelected ? ' selected' : ''}${isStaff ? ' staff' : ''}`}
       onClick={onClick}
       style={{ borderColor: isSelected ? rankColor : undefined }}
-      draggable={isStaff}
+      draggable={true}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
@@ -157,9 +158,7 @@ export function StudentCard({ student, isSelected, onClick }: StudentCardProps) 
         >
           {student.satisfaction >= 60 ? '😊' : student.satisfaction >= 30 ? '😐' : '😟'}
         </span>
-        {isStaff && (
-          <span className="drag-hint" title="Drag to assign as mentor">⠿</span>
-        )}
+        <span className="drag-hint" title={isStaff ? 'Drag student here to assign as mentor' : 'Drag me to assign a mentor'}>⠿</span>
       </div>
 
       {/* Rank & Stats */}
