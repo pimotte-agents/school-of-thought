@@ -37,8 +37,6 @@ function StaffCard({
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState(false);
-  const [isDropTarget, setIsDropTarget] = useState(false);
-  const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [mouseDownPos, setMouseDownPos] = useState({ x: 0, y: 0 });
   const [cardPos, setCardPos] = useState(() => ({ x: 0, y: 0 }));
   const hasMoved = useRef(false);
@@ -55,6 +53,7 @@ function StaffCard({
     (e: MouseEvent) => {
       if (e.button !== 0) return; // only left click
       e.preventDefault();
+      e.stopPropagation();
       setMouseDownPos({ x: e.clientX, y: e.clientY });
       hasMoved.current = false;
       isDraggingRef.current = true;
@@ -83,20 +82,37 @@ function StaffCard({
     [mouseDownPos, cardPos]
   );
 
+  // -----------------------------------------------------------------------
+  // Detect drop target via elementFromPoint on mouseup
+  // -----------------------------------------------------------------------
   const handleMouseUp = useCallback(
     (e: MouseEvent) => {
       if (!isDraggingRef.current) return;
       isDraggingRef.current = false;
       setDragging(false);
-      if (isDropTarget && !hasMoved.current) {
-        // Clicked on a valid drop target — set as mentor
-        onSetMentor(staff.id, e.currentTarget instanceof HTMLElement
-          ? e.currentTarget.getAttribute('data-staff-id') || null
-          : null);
+
+      if (hasMoved.current) {
+        // Dragged — check what's under the cursor
+        const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
+        const targetId = el?.closest('[data-staff-id]')?.getAttribute('data-staff-id');
+
+        if (targetId && targetId !== staff.id) {
+          // Dropped on another staff card — set as mentor
+          const state = useSchoolStore.getState();
+          const target = state.students.find((s) => s.id === targetId);
+          const mentee = state.students.find((s) => s.id === staff.id);
+          if (target && mentee && target.rank !== 'student') {
+            if (rankOrder(target.rank) > rankOrder(mentee.rank)) {
+              onSetMentor(staff.id, targetId);
+            }
+          }
+        }
+      } else {
+        // Not dragged — just a click. Toggle mentor if clicked on another card.
+        // (Handled by the drop target's onSetMentor)
       }
-      setIsDropTarget(false);
     },
-    [isDropTarget, staff.id, onSetMentor]
+    [staff.id, onSetMentor]
   );
 
   // -----------------------------------------------------------------------
@@ -137,49 +153,7 @@ function StaffCard({
     // Touch drop handled separately via drop target state
   }, []);
 
-  // -----------------------------------------------------------------------
-  // HTML5 drag-and-drop (for drag-onto-other-staff)
-  // -----------------------------------------------------------------------
-  const handleDragStart = (e: DragEvent) => {
-    if (!hasMoved.current) {
-      e.dataTransfer.setData('menteeId', staff.id);
-      e.dataTransfer.effectAllowed = 'move';
-      // Start a native drag that will be cancelled on drop
-      setTimeout(() => {
-        // The drag will be handled by the drop target
-      }, 0);
-    }
-  };
 
-  const handleDragOver = (e: DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    setIsDropTarget(true);
-    setIsDraggingOver(true);
-  };
-
-  const handleDragLeave = (e: DragEvent) => {
-    setIsDropTarget(false);
-    setIsDraggingOver(false);
-  };
-
-  const handleDrop = (e: DragEvent) => {
-    e.preventDefault();
-    setIsDropTarget(false);
-    setIsDraggingOver(false);
-
-    const menteeId = e.dataTransfer.getData('menteeId');
-    if (!menteeId || menteeId === staff.id) return;
-
-    const state = useSchoolStore.getState();
-    const mentee = state.students.find((s) => s.id === menteeId);
-    if (!mentee || mentee.rank === 'student') return;
-
-    // Mentor must be strictly higher rank
-    if (rankOrder(staff.rank) <= rankOrder(mentee.rank)) return;
-
-    onSetMentor(menteeId, staff.id);
-  };
 
   // -----------------------------------------------------------------------
   // Render
@@ -190,7 +164,7 @@ function StaffCard({
   return (
     <div
       ref={cardRef}
-      className={`staff-card ${dragging ? 'dragging' : ''} ${isDraggingOver ? 'drag-over' : ''}`}
+      className={`staff-card ${dragging ? 'dragging' : ''}`}
       style={{
         transform: `translate(${cardPos.x + panOffset.x}px, ${cardPos.y + panOffset.y}px)`,
         width: cardWidth,
@@ -204,11 +178,6 @@ function StaffCard({
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      draggable
-      onDragStart={handleDragStart}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
       data-staff-id={staff.id}
     >
       {/* Card header */}
@@ -400,13 +369,6 @@ export function StaffCanvas() {
   );
 
   // -----------------------------------------------------------------------
-  // Zoom controls
-  // -----------------------------------------------------------------------
-  const zoomIn = () => setZoom((prev) => Math.min(MAX_ZOOM, prev * 1.2));
-  const zoomOut = () => setZoom((prev) => Math.max(MIN_ZOOM, prev / 1.2));
-  const zoomReset = () => { setZoom(DEFAULT_ZOOM); setPanOffset({ x: 0, y: 0 }); };
-
-  // -----------------------------------------------------------------------
   // Render
   // -----------------------------------------------------------------------
   return (
@@ -414,10 +376,7 @@ export function StaffCanvas() {
       {/* Zoom controls */}
       <div className="canvas-controls">
         <span className="canvas-zoom-label">{Math.round(zoom * 100)}%</span>
-        <button className="canvas-btn" onClick={zoomOut} title="Zoom out">−</button>
-        <button className="canvas-btn" onClick={zoomReset} title="Reset view">⌂</button>
-        <button className="canvas-btn" onClick={zoomIn} title="Zoom in">+</button>
-        <span className="canvas-hint">Shift+drag to pan · Scroll to zoom</span>
+        <span className="canvas-hint">Scroll to zoom · Shift+drag to pan · Left-click drag to move</span>
       </div>
 
       {/* Drop target for removing mentor */}
