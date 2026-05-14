@@ -170,7 +170,7 @@ function StaffCard({
         width: cardWidth,
         height: cardHeight,
         zIndex: dragging ? 1000 : rankOrder(staff.rank),
-        borderColor: isDraggingOver ? '#4ecca3' : rankColor,
+        borderColor: dragging ? '#4ecca3' : rankColor,
       }}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
