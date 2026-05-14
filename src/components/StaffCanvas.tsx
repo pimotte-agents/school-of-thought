@@ -190,7 +190,7 @@ function StaffCard({
   return (
     <div
       ref={cardRef}
-      className={`staff-card ${isDragging ? 'dragging' : ''} ${isDraggingOver ? 'drag-over' : ''}`}
+      className={`staff-card ${dragging ? 'dragging' : ''} ${isDraggingOver ? 'drag-over' : ''}`}
       style={{
         transform: `translate(${cardPos.x + panOffset.x}px, ${cardPos.y + panOffset.y}px)`,
         width: cardWidth,
