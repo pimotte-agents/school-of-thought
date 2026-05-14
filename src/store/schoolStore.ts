@@ -519,16 +519,14 @@ export const useSchoolStore = create<SchoolStore>()(
       // Clear Save (dev only)
       // ===================================================================
       clearSave: () => {
-        // Vite's HMR client intercepts window.location.reload() and keeps
-        // the store alive. We must navigate away to a blank page first,
-        // which kills the current page entirely, then navigate to the
-        // app with a cache-busting param.
+        // Remove persisted data and force a full page reload.
+        // Using sessionStorage for persistence means the skip marker
+        // survives the reload. We navigate to about:blank to kill the
+        // Vite HMR client, then back to the app.
+        sessionStorage.removeItem('school-of-thought-save');
         sessionStorage.setItem('__school-of-thought-skip-rehydrate', '1');
-        localStorage.clear();
         const appUrl = `${location.origin}${location.pathname}?cleared=${Date.now()}`;
-        // Navigate to a blank page to kill the Vite HMR client
         window.location.href = 'about:blank';
-        // Immediately navigate to the app URL
         setTimeout(() => {
           window.location.href = appUrl;
         }, 100);
@@ -548,6 +546,18 @@ export const useSchoolStore = create<SchoolStore>()(
       },
     }),
     {
+      storage: {
+        getItem: (key) => {
+          const str = sessionStorage.getItem(key);
+          return str ? JSON.parse(str) : null;
+        },
+        setItem: (key, value) => {
+          sessionStorage.setItem(key, JSON.stringify(value));
+        },
+        removeItem: (key) => {
+          sessionStorage.removeItem(key);
+        },
+      },
       name: 'school-of-thought-save',
       version: 2,
       partialize: (state) => ({
