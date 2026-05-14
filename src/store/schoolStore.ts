@@ -519,11 +519,19 @@ export const useSchoolStore = create<SchoolStore>()(
       // Clear Save (dev only)
       // ===================================================================
       clearSave: () => {
-        // Signal the store to skip rehydration on next load
+        // Vite's HMR client intercepts window.location.reload() and keeps
+        // the store alive. We must navigate away to a blank page first,
+        // which kills the current page entirely, then navigate to the
+        // app with a cache-busting param.
         sessionStorage.setItem('__school-of-thought-skip-rehydrate', '1');
-        // Also clear localStorage as a fallback
         localStorage.clear();
-        window.location.reload();
+        const appUrl = `${location.origin}${location.pathname}?cleared=${Date.now()}`;
+        // Navigate to a blank page to kill the Vite HMR client
+        window.location.href = 'about:blank';
+        // Immediately navigate to the app URL
+        setTimeout(() => {
+          window.location.href = appUrl;
+        }, 100);
       },
 
       // ===================================================================
