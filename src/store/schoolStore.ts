@@ -519,12 +519,11 @@ export const useSchoolStore = create<SchoolStore>()(
       // Clear Save (dev only)
       // ===================================================================
       clearSave: () => {
-        // Remove persisted state and force a full page reload with a
-        // unique query param to bust the browser cache.
-        const url = `${location.origin}${location.pathname}?cleared=${Date.now()}`;
+        // Signal the store to skip rehydration on next load
+        sessionStorage.setItem('__school-of-thought-skip-rehydrate', '1');
+        // Also clear localStorage as a fallback
         localStorage.clear();
-        sessionStorage.clear();
-        window.location.replace(url);
+        window.location.reload();
       },
 
       // ===================================================================
@@ -554,7 +553,13 @@ export const useSchoolStore = create<SchoolStore>()(
         gameSpeed: state.gameSpeed,
         totalMonthsPlayed: state.totalMonthsPlayed,
       }),
-    onRehydrateStorage: (storage) => {
+    onRehydrateStorage: () => {
+      const skip = sessionStorage.getItem('__school-of-thought-skip-rehydrate');
+      if (skip === '1') {
+        console.log('[SchoolStore] Skipping rehydration (clear-save triggered)');
+        sessionStorage.removeItem('__school-of-thought-skip-rehydrate');
+        return undefined;
+      }
       return (state) => {
         console.log('[SchoolStore] Rehydrated from storage:', state ? `${state.students.length} students` : 'none');
       };
