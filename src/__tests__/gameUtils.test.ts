@@ -52,41 +52,28 @@ describe('createStudent', () => {
     expect(student.stats.teaching).toBeGreaterThanOrEqual(1);
   });
 
-  it('platonism attracts students with higher starting stats', () => {
-    const formalismStudents = Array.from({ length: 20 }, () =>
-      createStudent('x', 'formalism')
-    );
-    const platonismStudents = Array.from({ length: 20 }, () =>
-      createStudent('x', 'platonism')
+  it('generates students with varied stats', () => {
+    const students = Array.from({ length: 20 }, () =>
+      createStudent('x')
     );
 
-    const avgFormalism =
-      formalismStudents.reduce(
+    const avgStats =
+      students.reduce(
         (s, st) =>
           s +
           st.stats.rigor +
           st.stats.creativity +
           st.stats.teaching,
         0
-      ) / formalismStudents.length;
+      ) / students.length;
 
-    const avgPlatonism =
-      platonismStudents.reduce(
-        (s, st) =>
-          s +
-          st.stats.rigor +
-          st.stats.creativity +
-          st.stats.teaching,
-        0
-      ) / platonismStudents.length;
-
-    // Platonism students should have higher average total stats
-    // (not guaranteed every time, but very likely)
-    expect(avgPlatonism).toBeGreaterThanOrEqual(avgFormalism - 0.5);
+    // Average total stats should be reasonable (typically 5-11 with traits)
+    expect(avgStats).toBeGreaterThanOrEqual(4);
+    expect(avgStats).toBeLessThanOrEqual(14);
   });
 
   it('initializes specialization correctly', () => {
-    const student = createStudent('Spec Student', 'formalism');
+    const student = createStudent('Spec Student');
     expect(typeof student.specialization).toBe('object');
     expect(student.assignedFields).toEqual([]);
     expect(student.mentorId).toBeNull();

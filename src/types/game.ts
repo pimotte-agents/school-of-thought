@@ -68,7 +68,7 @@ export const POSITION_DATA: Record<PositionId, PositionType> = {
     id: 'phd',
     label: 'PhD Position',
     emoji: '🎓',
-    baseCount: 3,
+    baseCount: 1,
     baseCost: 0,
     costPerLevel: 50,
     color: '#a8d8ea',

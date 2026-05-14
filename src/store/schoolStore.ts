@@ -33,10 +33,9 @@ import {
 // --- Initial State Factory ---
 
 function createInitialState(): SchoolState {
-  const initialStudents: Student[] = [];
-  for (let i = 0; i < 3; i++) {
-    initialStudents.push(createStudent(generateStudentName()));
-  }
+  const initialStudents: Student[] = [
+    createStudent(generateStudentName()),
+  ];
 
   return {
     generation: 1,
@@ -47,8 +46,8 @@ function createInitialState(): SchoolState {
       prestige: 0,
     },
     config: {
-      maxCapacity: 3,
-      positions: { phd: 3, assistant: 0, associate: 0, professor: 0 },
+      maxCapacity: 1,
+      positions: { phd: 1, assistant: 0, associate: 0, professor: 0 },
       prestigeBuffs: [],
     },
     // maxCapacity is always the sum of position counts

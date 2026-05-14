@@ -14,10 +14,8 @@ function createTestStore(initial?: Partial<SchoolState>) {
   const defaults: SchoolState = {
     generation: 1,
     resources: { theorems: 5, money: 100, reputation: 10, prestige: 0 },
-    config: { maxCapacity: 5, positions: { phd: 5, assistant: 0, associate: 0, professor: 0 }, prestigeBuffs: [] },
+    config: { maxCapacity: 1, positions: { phd: 1, assistant: 0, associate: 0, professor: 0 }, prestigeBuffs: [] },
     students: [
-      createStudent(generateStudentName()),
-      createStudent(generateStudentName()),
       createStudent(generateStudentName()),
     ],
     currentTheorems: [],
@@ -141,9 +139,9 @@ function createTestStore(initial?: Partial<SchoolState>) {
 // --- Tests ---
 
 describe('initial state', () => {
-  it('starts with 3 students', () => {
+  it('starts with 1 student', () => {
     const store = createTestStore();
-    expect(store.getState().students.length).toBe(3);
+    expect(store.getState().students.length).toBe(1);
   });
 
   it('starts with correct resources', () => {
@@ -167,16 +165,20 @@ describe('initial state', () => {
 });
 
 describe('hireStudent', () => {
-  it('hires a student when there is capacity', () => {
+  it('hires a student when there is a PhD position available', () => {
     const store = createTestStore();
+    // Start with 2 PhD positions so we can hire one more PhD student
+    store.setState((s) => ({
+      config: { ...s.config, positions: { ...s.config.positions, phd: 2 }, maxCapacity: 2 },
+    }));
     const before = store.getState().students.length;
     store.getState().hireStudent();
     expect(store.getState().students.length).toBe(before + 1);
   });
 
-  it('does not hire when at capacity', () => {
+  it('does not hire when no PhD positions left', () => {
     const store = createTestStore();
-    store.setState({ config: { maxCapacity: 3, positions: { phd: 3, assistant: 0, associate: 0, professor: 0 }, prestigeBuffs: [] } });
+    // Already has 1 PhD position and 1 student — no room to hire
     const before = store.getState().students.length;
     store.getState().hireStudent();
     expect(store.getState().students.length).toBe(before);
@@ -184,6 +186,9 @@ describe('hireStudent', () => {
 
   it('reduces money when hiring', () => {
     const store = createTestStore();
+    store.setState((s) => ({
+      config: { ...s.config, positions: { ...s.config.positions, phd: 2 }, maxCapacity: 2 },
+    }));
     const before = store.getState().resources.money;
     store.getState().hireStudent();
     expect(store.getState().resources.money).toBeLessThan(before);
@@ -191,6 +196,9 @@ describe('hireStudent', () => {
 
   it('adds a hire event to the log', () => {
     const store = createTestStore();
+    store.setState((s) => ({
+      config: { ...s.config, positions: { ...s.config.positions, phd: 2 }, maxCapacity: 2 },
+    }));
     store.getState().hireStudent();
     const events = store.getState().eventLog;
     expect(events.find((e) => e.type === 'hire')).toBeDefined();
