@@ -276,6 +276,11 @@ function StaffCard({
   const scale = useSchoolStore.getState().zoom ?? 1;
   const nestedScale = Math.max(0.5, scale * 0.95); // mentees render slightly smaller
 
+  // Split mentees into staff and students
+  const staffMentees = mentees.filter((m) => m.rank !== 'student');
+  const studentMentees = mentees.filter((m) => m.rank === 'student');
+  const studentHeight = studentMentees.length > 0 ? 24 + studentMentees.length * 30 : 0;
+
   return (
     <div
       ref={cardRef}
@@ -283,7 +288,7 @@ function StaffCard({
       style={{
         transform: `translate(${cardPos.x + panOffset.x}px, ${cardPos.y + panOffset.y}px)`,
         width: cardWidth,
-        height: cardHeight,
+        height: cardHeight + studentHeight,
         zIndex: dragging ? 1000 : rankOrder(staff.rank),
         borderColor: dragging ? '#4ecca3' : rankColor,
       }}
@@ -314,9 +319,10 @@ function StaffCard({
       )}
 
       {/* Mentees (nested cards) */}
-      {mentees.length > 0 && (
+      {staffMentees.length > 0 && (
         <div className="staff-card-mentees">
-          {mentees.map((m) => (
+          <div className="mentees-label">Mentees</div>
+          {staffMentees.map((m) => (
             <div key={m.id} className="staff-card-mentee">
               <span style={{ color: getRankColor(m.rank) }}>
                 {RANK_EMOJI[m.rank]}
@@ -325,6 +331,39 @@ function StaffCard({
               <span className="staff-card-mentee-rank" style={{ color: getRankColor(m.rank) }}>
                 {RANK_LABELS[m.rank]}
               </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* PhD students list */}
+      {studentMentees.length > 0 && (
+        <div className="staff-card-students">
+          <div className="students-label">Students ({studentMentees.length})</div>
+          {studentMentees.map((s) => (
+            <div
+              key={s.id}
+              className="staff-card-student"
+              draggable
+              onDragStart={(e) => {
+                e.stopPropagation();
+                e.dataTransfer.setData('menteeId', s.id);
+                e.dataTransfer.effectAllowed = 'move';
+              }}
+            >
+              <span style={{ color: getRankColor(s.rank) }}>
+                {RANK_EMOJI[s.rank]}
+              </span>
+              <span>{s.name}</span>
+              <span className="staff-card-student-stats">Σ {s.stats.rigor + s.stats.creativity + s.stats.teaching}</span>
+              <span
+                className="staff-card-student-remove"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  assignMentor(s.id, null);
+                }}
+                title="Remove student"
+              >✕</span>
             </div>
           ))}
         </div>
@@ -362,7 +401,7 @@ export function StaffCanvas() {
   const getMentees = useCallback(
     (id: string): Student[] => {
       const state = useSchoolStore.getState();
-      return state.students.filter((s) => s.mentorId === id && s.rank !== 'student');
+      return state.students.filter((s) => s.mentorId === id);
     },
     []
   );

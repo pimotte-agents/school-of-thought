@@ -1819,3 +1819,93 @@ button {
   flex-wrap: wrap;
   gap: 3px;
 }
+
+/* ---------------------------------------------------------------------------
+   Staff Card — mentees & students
+   --------------------------------------------------------------------------- */
+
+.staff-card-mentees {
+  margin: 8px 0 0 0;
+  padding: 0 10px;
+  border-top: 1px solid var(--border);
+}
+
+.mentees-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+
+.staff-card-mentee {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  font-size: 12px;
+}
+
+.staff-card-mentee-rank {
+  margin-left: auto;
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+/* PhD students list */
+.staff-card-students {
+  margin: 8px 0 0 0;
+  padding: 0 10px;
+  border-top: 1px solid var(--border);
+}
+
+.students-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+
+.staff-card-student {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  font-size: 12px;
+  cursor: grab;
+}
+
+.staff-card-student:active {
+  cursor: grabbing;
+}
+
+.staff-card-student-stats {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.staff-card-student-remove {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--text-dim);
+  cursor: pointer;
+  border-radius: 50%;
+  margin-left: 4px;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.staff-card-student:hover .staff-card-student-remove {
+  opacity: 1;
+}
+
+.staff-card-student-remove:hover {
+  color: #e74c3c;
+  background: rgba(231, 76, 60, 0.1);
+}
