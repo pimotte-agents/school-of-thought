@@ -17,6 +17,7 @@ export function StudentCard({ student, isSelected, onClick }: StudentCardProps) 
   const { promoteStudent, assignFields, assignMentor } = useSchoolStore();
 
   const rankColor =
+    student.rank === 'professor' ? '#f59e0b' :
     student.rank === 'associate' ? '#c084fc' :
     student.rank === 'assistant' ? '#537895' : '#2a2a4a';
 
@@ -26,11 +27,14 @@ export function StudentCard({ student, isSelected, onClick }: StudentCardProps) 
 
   const canPromoteToAssistant = student.rank === 'student' && isPromotionEligible(student, 'assistant');
   const canPromoteToAssociate = student.rank === 'assistant' && isPromotionEligible(student, 'associate');
+  const canPromoteToProfessor = student.rank === 'associate' && isPromotionEligible(student, 'professor');
   const allRatios = checkRankRatios(useSchoolStore.getState().students);
 
   const handlePromote = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const targetRank = student.rank === 'student' ? 'assistant' : 'associate';
+    const targetRank =
+      student.rank === 'student' ? 'assistant' :
+      student.rank === 'assistant' ? 'associate' : 'professor';
     promoteStudent(student.id);
   };
 
@@ -172,16 +176,18 @@ export function StudentCard({ student, isSelected, onClick }: StudentCardProps) 
           </div>
 
           {/* Promotion Button */}
-          {(canPromoteToAssistant || canPromoteToAssociate) && (
+          {(canPromoteToAssistant || canPromoteToAssociate || canPromoteToProfessor) && (
             <button className="promote-btn" onClick={handlePromote}>
-              🎓 Promote to {canPromoteToAssociate ? 'Associate' : 'Assistant'} Professor
+              🎓 Promote to {canPromoteToProfessor ? 'Full' : canPromoteToAssociate ? 'Associate' : 'Assistant'} Professor
             </button>
           )}
-          {!canPromoteToAssistant && !canPromoteToAssociate && (
+          {!canPromoteToAssistant && !canPromoteToAssociate && !canPromoteToProfessor && (
             <div className="promote-locked">
               {!canPromoteToAssistant && "Need ≥1 month as student + 1 theorem"}
               {!canPromoteToAssistant && canPromoteToAssociate && ' | '}
               {!canPromoteToAssociate && "Need ≥2 months as assistant + 3 theorems"}
+              {!canPromoteToAssociate && canPromoteToProfessor && ' | '}
+              {!canPromoteToProfessor && "Need ≥6 months as associate + 8 theorems"}
             </div>
           )}
         </div>

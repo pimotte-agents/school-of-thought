@@ -108,6 +108,7 @@ export function getRankTotal(rank: StudentRank): number {
     student: 1,
     assistant: 2,
     associate: 4,
+    professor: 8,
   };
   return multipliers[rank];
 }
@@ -124,7 +125,8 @@ export function getRankEmoji(rank: StudentRank): string {
 
 export function checkRankRatios(
   students: Student[],
-  ratios: RankRatios = DEFAULT_RATIOS
+  ratios: RankRatios = DEFAULT_RATIOS,
+  targetRank?: StudentRank
 ): { canPromote: boolean; reason: string } {
   const total = students.length;
   if (total === 0) return { canPromote: false, reason: 'No students' };
@@ -134,16 +136,34 @@ export function checkRankRatios(
       acc[s.rank]++;
       return acc;
     },
-    { student: 0, assistant: 0, associate: 0 } as Record<StudentRank, number>
+    { student: 0, assistant: 0, associate: 0, professor: 0 } as Record<StudentRank, number>
   );
 
-  // Check if promoting a student would violate associate ratio
-  if (ranks.associate + 1 > Math.floor(total * ratios.associateMaxPercent)) {
-    return { canPromote: false, reason: `Associate ratio would exceed ${Math.round(ratios.associateMaxPercent * 100)}%` };
+  // Check the ratio for the target promotion rank
+  const ratioKeyMap: Record<StudentRank, keyof RankRatios> = {
+    student: 'assistantMaxPercent',
+    assistant: 'associateMaxPercent',
+    associate: 'professorMaxPercent',
+    professor: 'professorMaxPercent',
+  };
+
+  if (targetRank && ratioKeyMap[targetRank]) {
+    const maxPercent = ratios[ratioKeyMap[targetRank]];
+    if (ranks[targetRank] + 1 > Math.floor(total * maxPercent)) {
+      return { canPromote: false, reason: `${targetRank} ratio would exceed ${Math.round(maxPercent * 100)}%` };
+    }
+    return { canPromote: true, reason: '' };
   }
 
-  // Check if promoting a student to assistant would violate assistant ratio
-  if (ranks.assistant + 1 > Math.floor(total * ratios.assistantMaxPercent)) {
+  // Without a target rank: check if any promotion is possible.
+  // Only check a rank's ratio if there are students at a lower rank who could be promoted to it.
+  if (ranks.associate > 0 && ranks.professor + 1 > Math.floor(total * ratios.professorMaxPercent)) {
+    return { canPromote: false, reason: `Professor ratio would exceed ${Math.round(ratios.professorMaxPercent * 100)}%` };
+  }
+  if (ranks.assistant > 0 && ranks.associate + 1 > Math.floor(total * ratios.associateMaxPercent)) {
+    return { canPromote: false, reason: `Associate ratio would exceed ${Math.round(ratios.associateMaxPercent * 100)}%` };
+  }
+  if (ranks.student > 0 && ranks.assistant + 1 > Math.floor(total * ratios.assistantMaxPercent)) {
     return { canPromote: false, reason: `Assistant ratio would exceed ${Math.round(ratios.assistantMaxPercent * 100)}%` };
   }
 
@@ -159,7 +179,7 @@ export function isPromotionEligible(
   if (student.rank === targetRank) return false;
 
   // Check rank progression order
-  const rankOrder: StudentRank[] = ['student', 'assistant', 'associate'];
+  const rankOrder: StudentRank[] = ['student', 'assistant', 'associate', 'professor'];
   const currentIdx = rankOrder.indexOf(student.rank);
   const targetIdx = rankOrder.indexOf(targetRank);
   if (targetIdx !== currentIdx + 1) return false; // Must promote one step at a time
@@ -168,7 +188,8 @@ export function isPromotionEligible(
   const minMonths: Record<StudentRank, number> = {
     student: 1,
     assistant: 2,
-    associate: 999, // Won't happen
+    associate: 6,
+    professor: 999, // Won't happen without manual trigger or prestige upgrade
   };
   if (student.monthsInRank < minMonths[student.rank]) return false;
 
@@ -177,6 +198,7 @@ export function isPromotionEligible(
     student: 0,
     assistant: 1,
     associate: 3,
+    professor: 8,
   };
   if (student.theoremsProved < minTheorems[targetRank]) return false;
 

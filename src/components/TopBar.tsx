@@ -14,6 +14,7 @@ const RANK_ICONS: Record<StudentRank, string> = {
   student: '🎓',
   assistant: '👤',
   associate: '👑',
+  professor: '🏛️',
 };
 
 export function TopBar({ onTogglePause, onCycleSpeed }: TopBarProps) {

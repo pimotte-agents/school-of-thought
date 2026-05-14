@@ -338,11 +338,12 @@ export const useSchoolStore = create<SchoolStore>()(
         if (!student) return;
 
         const targetRank =
-          student.rank === 'student' ? 'assistant' : 'associate';
+          student.rank === 'student' ? 'assistant' :
+          student.rank === 'assistant' ? 'associate' : 'professor';
         if (!isPromotionEligible(student, targetRank)) return;
 
         // Check ratio constraints
-        const ratios = checkRankRatios(state.students);
+        const ratios = checkRankRatios(state.students, DEFAULT_RATIOS, targetRank);
         if (!ratios.canPromote) return;
 
         set((prev) => ({
@@ -362,7 +363,10 @@ export const useSchoolStore = create<SchoolStore>()(
             {
               id: generateId(),
               type: 'promotion',
-              message: `🎉 ${student.name} → ${targetRank === 'assistant' ? 'Assistant' : 'Associate'} Professor!`,
+              message: `🎉 ${student.name} → ${
+                targetRank === 'assistant' ? 'Assistant' :
+                targetRank === 'associate' ? 'Associate' :
+                'Full' } Professor!`,
               timestamp: prev.totalMonthsPlayed,
               studentId: student.id,
             },

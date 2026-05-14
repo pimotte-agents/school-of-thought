@@ -240,6 +240,17 @@ button {
   border-color: var(--accent-purple);
 }
 
+.student-card.rank-professor {
+  border-color: rgba(245, 158, 11, 0.3);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.03), rgba(245, 158, 11, 0.08));
+}
+
+.student-card.rank-professor:hover,
+.student-card.rank-professor.selected {
+  border-color: #f59e0b;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.25);
+}
+
 .student-card.rank-assistant {
   border-color: rgba(83, 120, 149, 0.3);
 }

@@ -87,18 +87,20 @@ export const IDEOLOGY_DATA: Record<SchoolIdeology, IdeologyInfo> = {
 
 // --- Student Ranks ---
 
-export type StudentRank = 'student' | 'assistant' | 'associate';
+export type StudentRank = 'student' | 'assistant' | 'associate' | 'professor';
 
 export const RANK_LABELS: Record<StudentRank, string> = {
   student: 'PhD Candidate',
   assistant: 'Assistant Professor',
   associate: 'Associate Professor',
+  professor: 'Full Professor',
 };
 
 export const RANK_EMOJI: Record<StudentRank, string> = {
   student: '🎓',
   assistant: '👤',
   associate: '👑',
+  professor: '🏛️',
 };
 
 // --- Student ---
@@ -254,12 +256,14 @@ export interface EventEntry {
 // --- Ratio Constraints ---
 
 export interface RankRatios {
-  associateMaxPercent: number; // of total
-  assistantMaxPercent: number; // of total
-  studentMaxPercent: number; // of total
+  professorMaxPercent: number;   // of total
+  associateMaxPercent: number;   // of total
+  assistantMaxPercent: number;   // of total
+  studentMaxPercent: number;     // of total
 }
 
 export const DEFAULT_RATIOS: RankRatios = {
+  professorMaxPercent: 0.1,
   associateMaxPercent: 0.3,
   assistantMaxPercent: 0.6,
   studentMaxPercent: 1.0,
