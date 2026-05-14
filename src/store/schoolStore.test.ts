@@ -33,7 +33,6 @@ function createTestStore(initial?: Partial<SchoolState>) {
     hireStudent: () => void;
     promoteStudent: (id: string) => void;
     assignFields: (id: string, fields: ResearchField[]) => void;
-    assignFunding: (id: string, level: number) => void;
     setGameSpeed: (speed: number) => void;
     setIdeology: (ideology: SchoolIdeology) => void;
     retire: () => void;
@@ -89,16 +88,6 @@ function createTestStore(initial?: Partial<SchoolState>) {
         ...prev,
         students: prev.students.map((s) =>
           s.id === studentId ? { ...s, assignedFields: fields } : s
-        ),
-      }));
-    },
-
-    assignFunding: (studentId: string, fundingLevel: number) => {
-      const clamped = Math.max(0, Math.min(100, fundingLevel));
-      set((prev) => ({
-        ...prev,
-        students: prev.students.map((s) =>
-          s.id === studentId ? { ...s, fundingLevel: clamped } : s
         ),
       }));
     },
@@ -283,26 +272,6 @@ describe('assignFields', () => {
     store.getState().assignFields(id, ['Boolean Logic', 'Number Theory']);
     const student = store.getState().students.find((s) => s.id === id);
     expect(student?.assignedFields).toEqual(['Boolean Logic', 'Number Theory']);
-  });
-});
-
-describe('assignFunding', () => {
-  it('assigns funding level', () => {
-    const store = createTestStore();
-    const id = store.getState().students[0].id;
-    store.getState().assignFunding(id, 75);
-    const student = store.getState().students.find((s) => s.id === id);
-    expect(student?.fundingLevel).toBe(75);
-  });
-
-  it('clamps funding to 0-100', () => {
-    const store = createTestStore();
-    const id = store.getState().students[0].id;
-    store.getState().assignFunding(id, 150);
-    expect(store.getState().students.find((s) => s.id === id)?.fundingLevel).toBe(100);
-
-    store.getState().assignFunding(id, -20);
-    expect(store.getState().students.find((s) => s.id === id)?.fundingLevel).toBe(0);
   });
 });
 

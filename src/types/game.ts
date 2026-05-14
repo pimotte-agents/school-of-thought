@@ -166,7 +166,6 @@ export interface Student {
   traits: TraitId[];
   specialization: Record<ResearchField, number>;
   assignedFields: ResearchField[];
-  fundingLevel: number; // 0-100 percentage of assigned budget
   mentorId: string | null;
   menteeIds: string[];
   theoremsProved: number;

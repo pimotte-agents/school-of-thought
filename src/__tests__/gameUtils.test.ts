@@ -216,32 +216,14 @@ describe('calculateSatisfaction', () => {
   it('returns 70 for a student with no issues', () => {
     const student = createStudent('S', 'formalism');
     student.assignedFields = ['Boolean Logic'];
-    student.fundingLevel = 80;
     const result = calculateSatisfaction(student, [student]);
     expect(result).toBeGreaterThanOrEqual(60);
     expect(result).toBeLessThanOrEqual(80);
   });
 
-  it('reduces satisfaction for low funding', () => {
-    const student = createStudent('S', 'formalism');
-    student.fundingLevel = 10;
-    const result = calculateSatisfaction(student, [student]);
-    // Base 70 - 20 for low funding = 50
-    expect(result).toBeLessThan(65);
-  });
-
-  it('does not reduce satisfaction for high funding', () => {
-    const student = createStudent('S', 'formalism');
-    student.fundingLevel = 100;
-    const result = calculateSatisfaction(student, [student]);
-    // Base 70, no penalty for high funding
-    expect(result).toBeGreaterThanOrEqual(65);
-  });
-
   it('perfectionists have reduced satisfaction', () => {
     const student = createStudent('S', 'formalism');
     student.traits = ['perfectionist'];
-    student.fundingLevel = 100;
     const result = calculateSatisfaction(student, [student]);
     expect(result).toBeLessThan(70);
   });

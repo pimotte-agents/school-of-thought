@@ -67,7 +67,6 @@ export function createStudent(
       'Combinatorics': 0,
     },
     assignedFields: [],
-    fundingLevel: 0,
     mentorId: null,
     menteeIds: [],
     theoremsProved: 0,
@@ -202,13 +201,6 @@ export function calculateSatisfaction(
     if (getTotalStats(peer) < studentTotal - 2) {
       sat -= 10; // Penalized for being above a less talented peer
     }
-  }
-
-  // Funding satisfaction
-  if (student.fundingLevel < 20) {
-    sat -= 20;
-  } else if (student.fundingLevel < 50) {
-    sat -= 5;
   }
 
   // Mentorship satisfaction

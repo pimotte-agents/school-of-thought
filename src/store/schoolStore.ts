@@ -83,22 +83,19 @@ function calcTheoremProgress(
   students: Student[]
 ): number {
   let totalStats = 0;
-  let totalFunding = 0;
 
   for (const studentId of active.assignedStudents) {
     const student = students.find((s) => s.id === studentId);
     if (student) {
       totalStats += student.stats.rigor + student.stats.creativity + student.stats.teaching;
-      totalFunding += student.fundingLevel;
     }
   }
 
   const bonuses = getIdeologyBonuses(getStore().config.ideology);
   const baseRate = 100 / active.theorem.baseTime;
   const statsMult = Math.max(0.1, totalStats * 0.1);
-  const fundingMult = 0.3 + (totalFunding / (active.assignedStudents.length * 100)) * 0.7;
 
-  return baseRate * statsMult * fundingMult * bonuses.theoremSpeed;
+  return baseRate * statsMult * bonuses.theoremSpeed;
 }
 
 function studentTotalStats(s: Student): number {
@@ -116,7 +113,6 @@ interface SchoolStore extends SchoolState {
   hireStudent: () => void;
   promoteStudent: (studentId: string) => void;
   assignFields: (studentId: string, fields: ResearchField[]) => void;
-  assignFunding: (studentId: string, fundingLevel: number) => void;
   assignMentor: (studentId: string, mentorId: string | null) => void;
   retire: () => void;
   setIdeology: (ideology: SchoolIdeology) => void;
@@ -291,7 +287,7 @@ export const useSchoolStore = create<SchoolStore>()(
                   theorem: next,
                   progress: 0,
                   assignedStudents: [student.id],
-                  fundingPercentage: student.fundingLevel,
+                  fundingPercentage: 50,
                   startDate: newState.totalMonthsPlayed,
                 });
               }
@@ -379,16 +375,6 @@ export const useSchoolStore = create<SchoolStore>()(
           ...prev,
           students: prev.students.map((s) =>
             s.id === studentId ? { ...s, assignedFields: fields } : s
-          ),
-        }));
-      },
-
-      assignFunding: (studentId: string, fundingLevel: number) => {
-        const clamped = Math.max(0, Math.min(100, fundingLevel));
-        set((prev) => ({
-          ...prev,
-          students: prev.students.map((s) =>
-            s.id === studentId ? { ...s, fundingLevel: clamped } : s
           ),
         }));
       },

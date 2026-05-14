@@ -14,7 +14,7 @@ interface StudentCardProps {
 }
 
 export function StudentCard({ student, isSelected, onClick }: StudentCardProps) {
-  const { promoteStudent, assignFunding, assignFields, assignMentor } = useSchoolStore();
+  const { promoteStudent, assignFields, assignMentor } = useSchoolStore();
 
   const rankColor =
     student.rank === 'associate' ? '#c084fc' :
@@ -32,11 +32,6 @@ export function StudentCard({ student, isSelected, onClick }: StudentCardProps) 
     e.stopPropagation();
     const targetRank = student.rank === 'student' ? 'assistant' : 'associate';
     promoteStudent(student.id);
-  };
-
-  const handleFundingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = parseInt(e.target.value);
-    if (!isNaN(val)) assignFunding(student.id, val);
   };
 
   const handleFieldToggle = (field: ResearchField) => {
@@ -116,7 +111,6 @@ export function StudentCard({ student, isSelected, onClick }: StudentCardProps) 
       <div className="student-meta">
         <span>{student.theoremsProved} theorems</span>
         <span>•</span>
-        <span>Funding: {student.fundingLevel}%</span>
         {student.mentorId && (
           <>
             <span>•</span>
@@ -148,21 +142,6 @@ export function StudentCard({ student, isSelected, onClick }: StudentCardProps) 
       {/* Selected Panel */}
       {isSelected && (
         <div className="student-details">
-          {/* Funding Slider */}
-          <div className="detail-row">
-            <label>Funding</label>
-            <div className="slider-row">
-              <input
-                type="range"
-                min={0}
-                max={100}
-                value={student.fundingLevel}
-                onChange={handleFundingChange}
-              />
-              <span>{student.fundingLevel}%</span>
-            </div>
-          </div>
-
           {/* Field Assignment */}
           <div className="detail-row">
             <label>Fields</label>
