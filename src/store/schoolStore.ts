@@ -519,14 +519,12 @@ export const useSchoolStore = create<SchoolStore>()(
       // Clear Save (dev only)
       // ===================================================================
       clearSave: () => {
-        // Remove persisted state and force a full page reload.
-        // Using location.href to ensure the browser discards the current
-        // document entirely before navigating, so Zustand's persist
-        // rehydration picks up the empty storage.
-        localStorage.removeItem('school-of-thought-save');
-        // Set a marker so onRehydrateStorage knows to skip rehydration
-        sessionStorage.setItem('__clear-save-pending', '1');
-        window.location.href = location.origin + location.pathname;
+        // Remove persisted state and force a full page reload with a
+        // unique query param to bust the browser cache.
+        const url = `${location.origin}${location.pathname}?cleared=${Date.now()}`;
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.replace(url);
       },
 
       // ===================================================================
@@ -556,13 +554,7 @@ export const useSchoolStore = create<SchoolStore>()(
         gameSpeed: state.gameSpeed,
         totalMonthsPlayed: state.totalMonthsPlayed,
       }),
-    onRehydrateStorage: () => {
-      // Skip rehydration if clear-save was just triggered
-      const pending = sessionStorage.getItem('__clear-save-pending');
-      if (pending === '1') {
-        sessionStorage.removeItem('__clear-save-pending');
-        return undefined; // return undefined to skip rehydration
-      }
+    onRehydrateStorage: (storage) => {
       return (state) => {
         console.log('[SchoolStore] Rehydrated from storage:', state ? `${state.students.length} students` : 'none');
       };
