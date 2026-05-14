@@ -1515,3 +1515,250 @@ button {
 .clear-zone-content span {
   font-size: 18px;
 }
+
+/* =============================================================================
+   Staff Canvas
+   ============================================================================= */
+
+.staff-canvas-wrapper {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 500px;
+  overflow: hidden;
+}
+
+.canvas-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+
+.canvas-zoom-label {
+  font-weight: 600;
+  min-width: 45px;
+  text-align: center;
+}
+
+.canvas-btn {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.canvas-btn:hover {
+  background: var(--accent-blue);
+  color: white;
+  border-color: var(--accent-blue);
+}
+
+.canvas-hint {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-left: auto;
+}
+
+.clear-drop-zone {
+  margin: 8px 12px;
+  padding: 12px;
+  border: 2px dashed #e94560;
+  border-radius: 8px;
+  text-align: center;
+  background: rgba(233, 69, 96, 0.05);
+  color: var(--text-dim);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.clear-drop-zone:hover {
+  background: rgba(233, 69, 96, 0.15);
+  border-color: #ff6b6b;
+}
+
+.clear-drop-zone span {
+  font-size: 18px;
+  margin-right: 6px;
+}
+
+.staff-canvas {
+  flex: 1;
+  overflow: auto;
+  background:
+    radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 30px 30px;
+  background-color: var(--bg);
+  position: relative;
+  min-height: 600px;
+  min-width: 600px;
+  user-select: none;
+  cursor: grab;
+}
+
+.staff-canvas.panning {
+  cursor: grabbing;
+}
+
+.canvas-empty {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+/* ---------------------------------------------------------------------------
+   Staff Card
+   --------------------------------------------------------------------------- */
+
+.staff-card {
+  position: absolute;
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  cursor: grab;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  user-select: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.staff-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.staff-card.dragging {
+  cursor: grabbing;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  z-index: 1000 !important;
+  opacity: 0.9;
+}
+
+.staff-card.drag-over {
+  border-color: #4ecca3 !important;
+  box-shadow: 0 0 0 3px rgba(78, 204, 163, 0.3);
+}
+
+.staff-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.staff-card-name {
+  font-weight: 600;
+  font-size: 14px;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.staff-card-rank {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.staff-card-mentor {
+  font-size: 12px;
+  color: var(--accent-green);
+  padding: 4px 8px;
+  background: rgba(78, 204, 163, 0.1);
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+
+.staff-card-mentees {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.staff-card-mentee {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.staff-card-mentee-rank {
+  font-size: 10px;
+  opacity: 0.6;
+  margin-left: auto;
+}
+
+/* ---------------------------------------------------------------------------
+   Regular Students List
+   --------------------------------------------------------------------------- */
+
+.regular-students-list {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+}
+
+.regular-students-list h3 {
+  font-size: 13px;
+  margin: 0 0 6px 0;
+  color: var(--text-dim);
+}
+
+.regular-students-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.regular-student-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 12px;
+  cursor: grab;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.regular-student-chip:hover {
+  border-color: var(--accent-blue);
+  background: var(--bg-card-hover);
+}
+
+.regular-student-chip.dragging {
+  cursor: grabbing;
+  opacity: 0.6;
+}
+
+.student-stats {
+  font-size: 11px;
+  opacity: 0.5;
+}
