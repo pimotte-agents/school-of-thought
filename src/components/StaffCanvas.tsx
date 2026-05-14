@@ -25,15 +25,18 @@ function rankOrder(rank: StudentRank): number {
 function PhDStudentBox({
   student,
   panOffset,
+  onClearMentor,
 }: {
   student: Student;
   panOffset: { x: number; y: number };
+  onClearMentor: (studentId: string) => void;
 }) {
   const [dragging, setDragging] = useState(false);
   const [mouseDownPos, setMouseDownPos] = useState({ x: 0, y: 0 });
   const [cardPos, setCardPos] = useState(() => ({ x: 0, y: 0 }));
   const hasMoved = useRef(false);
   const isDraggingRef = useRef(false);
+  const boxRef = useRef<HTMLDivElement>(null);
 
   const boxWidth = 140;
   const boxHeight = 60;
@@ -68,11 +71,35 @@ function PhDStudentBox({
     [mouseDownPos]
   );
 
-  const handleMouseUp = useCallback(() => {
-    if (!isDraggingRef.current) return;
-    isDraggingRef.current = false;
-    setDragging(false);
-  }, []);
+  const handleMouseUp = useCallback(
+    (e: MouseEvent) => {
+      if (!isDraggingRef.current) return;
+      isDraggingRef.current = false;
+      setDragging(false);
+
+      // Detect what's under the cursor
+      const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
+      const staffId = el?.closest('[data-staff-id]')?.getAttribute('data-staff-id');
+      const clearZone = el?.closest('.clear-drop-zone');
+
+      if (clearZone) {
+        // Dropped on clear zone — remove mentor
+        if (student.mentorId) {
+          onClearMentor(student.id);
+        }
+      } else if (staffId && staffId !== student.id) {
+        // Dropped on a staff card — set as mentor
+        const state = useSchoolStore.getState();
+        const targetStaff = state.students.find((s) => s.id === staffId);
+        if (targetStaff && targetStaff.rank !== 'student') {
+          if (rankOrder(targetStaff.rank) > rankOrder(student.rank)) {
+            useSchoolStore.getState().assignMentor(student.id, staffId);
+          }
+        }
+      }
+    },
+    [student.id, student.mentorId, onClearMentor]
+  );
 
   return (
     <div
@@ -509,6 +536,7 @@ export function StaffCanvas() {
             key={s.id}
             student={s}
             panOffset={panOffset}
+            onClearMentor={(id) => onSetMentor(id, null)}
           />
         ))}
       </div>
