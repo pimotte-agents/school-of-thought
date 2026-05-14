@@ -112,6 +112,7 @@ interface SchoolStore extends SchoolState {
   retire: () => void;
   setGameSpeed: (speed: number) => void;
   clearEventLog: () => void;
+  clearSave: () => void;
   exportSave: () => string;
   importSave: (json: string) => void;
 }
@@ -512,6 +513,14 @@ export const useSchoolStore = create<SchoolStore>()(
           ...prev,
           eventLog: prev.eventLog.slice(-50),
         }));
+      },
+
+      // ===================================================================
+      // Clear Save (dev only)
+      // ===================================================================
+      clearSave: () => {
+        localStorage.removeItem('school-of-thought-save');
+        window.location.reload();
       },
 
       // ===================================================================

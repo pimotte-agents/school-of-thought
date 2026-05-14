@@ -11,6 +11,7 @@ export function ActionsPanel() {
     retire,
     setGameSpeed,
     clearEventLog,
+    clearSave,
     exportSave,
     importSave,
     resources,
@@ -134,6 +135,19 @@ export function ActionsPanel() {
           <button className="action-btn clear" onClick={clearEventLog}>
             🗑 Clear Log
           </button>
+          {import.meta.env.DEV && (
+            <button
+              className="action-btn clear-save"
+              onClick={() => {
+                if (confirm('Clear all save data and reset to defaults? This cannot be undone.')) {
+                  clearSave();
+                }
+              }}
+              title="Dev only: clears localStorage and reloads"
+            >
+              💥 Clear Save
+            </button>
+          )}
         </div>
 
         {showImport && (
